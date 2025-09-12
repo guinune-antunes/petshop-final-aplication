@@ -1,0 +1,196 @@
+/* ... (Todo o CSS anterior permanece o mesmo) ... */
+
+/* --- PÁGINA DE CLIENTES --- */
+.main-content-split {
+    display: flex;
+    height: calc(100vh - 70px); /* Altura da viewport menos o header */
+}
+
+.left-panel {
+    width: 350px;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+.right-panel {
+    flex-grow: 1;
+    padding: 20px 30px;
+    overflow-y: auto; /* Permite scroll se o conteúdo for grande */
+}
+
+/* Painel da Esquerda */
+.left-panel-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+.left-panel-header h2 {
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+.search-bar i {
+    color: #999;
+}
+.search-bar input {
+    border: none;
+    outline: none;
+    margin-left: 10px;
+    width: 100%;
+}
+
+.client-list {
+    list-style: none;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.client-list-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+.client-list-item:hover {
+    background-color: #f8f8f8;
+}
+.client-list-item.active {
+    background-color: #eaf5ff;
+    border-left: 4px solid #3498db;
+    padding-left: 16px;
+}
+.client-list-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+.client-info .client-name {
+    display: block;
+    font-weight: 500;
+}
+.client-info .client-phone {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+/* Painel da Direita */
+.right-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.right-panel-header h3 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+.right-panel-header h3 strong {
+    font-weight: 600;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.pet-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.pet-card {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+.pet-card .pet-icon {
+    font-size: 1.8rem;
+    color: #1abc9c;
+    margin-right: 15px;
+}
+.pet-details {
+    flex-grow: 1;
+}
+.pet-details .pet-name {
+    font-weight: 600;
+    display: block;
+}
+.pet-details .pet-breed {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+.pet-actions i {
+    margin-left: 10px;
+    cursor: pointer;
+    color: #6c757d;
+}
+.pet-actions i:hover {
+    color: #343a40;
+}
+
+/* Timeline */
+.timeline {
+    list-style: none;
+    padding-left: 20px;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 15px 0 15px 30px;
+    border-left: 2px solid #e0e0e0;
+}
+.timeline-item:last-child {
+    border-left: 2px solid transparent; /* Remove a linha do último item */
+}
+
+.timeline-icon {
+    position: absolute;
+    left: -16px; /* Metade do tamanho do ícone */
+    top: 15px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+.timeline-icon.service { background-color: #3498db; }
+.timeline-icon.product { background-color: #9b59b6; }
+
+.timeline-content .timeline-title {
+    font-weight: 600;
+}
+.timeline-content p {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 5px 0;
+}
+.timeline-content .timeline-date {
+    font-size: 0.8rem;
+    color: #999;
+}

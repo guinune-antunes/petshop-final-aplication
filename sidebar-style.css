@@ -1,0 +1,92 @@
+/* --- Estilos da Sidebar --- */
+
+/* Importa uma fonte limpa para melhor legibilidade (Opcional, mas recomendado) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+/* Define o container principal da sidebar */
+.sidebar {
+    /* Cor de fundo escura, profissional e com bom contraste */
+    background-color: #2c3e50;
+    /* Cor do texto clara */
+    color: #ecf0f1;
+    
+    /* Largura fixa da sidebar */
+    width: 260px;
+    
+    /* Garante que a sidebar ocupe 100% da altura da tela */
+    height: 100vh;
+    
+    /* Fixa a sidebar na tela, para que não role com o conteúdo */
+    position: fixed;
+    top: 0;
+    left: 0;
+    
+    /* Usa Flexbox para organizar o header e a navegação verticalmente */
+    display: flex;
+    flex-direction: column;
+    
+    /* Fonte a ser usada em toda a sidebar */
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Estiliza o cabeçalho da sidebar (onde fica o logo "PetCRM") */
+.sidebar-header {
+    padding: 24px 20px; /* Espaçamento interno generoso */
+    font-size: 1.5rem;   /* Tamanho da fonte do título */
+    font-weight: 600;    /* Deixa a fonte mais forte (bold) */
+    text-align: center;  /* Centraliza o conteúdo */
+    
+    /* Uma linha sutil para separar o cabeçalho dos links de navegação */
+    border-bottom: 1px solid #34495e;
+}
+
+/* Ícone de patinha no cabeçalho */
+.sidebar-header .fa-paw {
+    margin-right: 12px; /* Espaço entre o ícone e o texto */
+}
+
+/* Container dos links de navegação */
+.sidebar-nav {
+    /* Permite que esta área cresça e ocupe o espaço restante na sidebar */
+    flex-grow: 1;
+    padding-top: 15px; /* Um pequeno espaço no topo da lista */
+}
+
+/* Estilo individual de cada link de navegação */
+.nav-item {
+    /* Remove o sublinhado padrão dos links */
+    text-decoration: none;
+    /* Cor do texto dos links */
+    color: #ecf0f1;
+    /* Transforma o link em um bloco para ocupar toda a largura e aceitar padding vertical */
+    display: block;
+    /* Espaçamento interno (vertical, horizontal) */
+    padding: 16px 25px;
+    /* Efeito de transição suave para o background-color */
+    transition: background-color 0.3s ease;
+}
+
+/* Efeito ao passar o mouse sobre um link */
+.nav-item:hover {
+    /* Muda a cor de fundo para um tom um pouco mais claro, dando feedback ao usuário */
+    background-color: #34495e;
+}
+
+/* Estilo ESPECIAL para o link da página ATIVA */
+.nav-item.active {
+    /* Cor de fundo de destaque para mostrar qual página está selecionada */
+    background-color: #1abc9c; /* Um verde-azulado vibrante */
+    /* Deixa o texto do item ativo um pouco mais forte */
+    font-weight: 500;
+    /* Adiciona uma sutil sombra para dar profundidade */
+    box-shadow: inset 3px 0 0 0 #f1c40f; /* Uma pequena barra amarela na esquerda */
+}
+
+/* Estiliza os ícones dentro dos links de navegação */
+.nav-item i {
+    /* Espaço entre o ícone e o texto do link */
+    margin-right: 16px;
+    /* Garante que todos os ícones ocupem o mesmo espaço horizontal para um alinhamento perfeito do texto */
+    width: 20px;
+    text-align: center;
+}
