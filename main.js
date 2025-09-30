@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- LÓGICA DO MODO ESCURO (SEMPRE PRESENTE) ---
+    // --- LÓGICA DO MODO ESCURO (GLOBAL) ---
     const themeToggleBtn = document.getElementById('theme-toggle');
     if (themeToggleBtn) {
         const body = document.body;
@@ -13,8 +13,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
             }
         };
+
+        // Aplica o tema salvo no localStorage ou o padrão 'light'
         const savedTheme = localStorage.getItem('theme') || 'light';
         applyTheme(savedTheme);
+
         themeToggleBtn.addEventListener('click', () => {
             let newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
             applyTheme(newTheme);
@@ -25,23 +28,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- LÓGICA DO MODAL DA AGENDA (SÓ RODA NA PÁGINA DA AGENDA) ---
     const addAppointmentBtn = document.getElementById('add-appointment-btn');
     if (addAppointmentBtn) {
-        // ... (código do modal da agenda, que já funciona) ...
+        const appointmentModal = document.getElementById('appointment-modal');
+        if (appointmentModal) {
+            const closeModalBtn = appointmentModal.querySelector('.close-modal-btn');
+            const cancelBtn = appointmentModal.querySelector('.cancel-btn');
+
+            addAppointmentBtn.addEventListener('click', () => appointmentModal.style.display = 'flex');
+            closeModalBtn.addEventListener('click', () => appointmentModal.style.display = 'none');
+            cancelBtn.addEventListener('click', () => appointmentModal.style.display = 'none');
+            appointmentModal.addEventListener('click', (event) => {
+                if (event.target === appointmentModal) appointmentModal.style.display = 'none';
+            });
+        }
     }
 
     // --- LÓGICA DA PÁGINA DE CLIENTES E PETS ---
-    const clientPageContainer = document.getElementById('add-client-btn');
-    if (clientPageContainer) {
+    const addClientBtn = document.getElementById('add-client-btn');
+    if (addClientBtn) { // Este IF garante que o código abaixo só rode na página de clientes
+        
+        // --- Seleção de Elementos ---
         const clientModal = document.getElementById('client-modal');
         const petForm = document.getElementById('pet-form');
         const clientForm = document.getElementById('client-form');
         const petList = document.getElementById('pet-list');
         const saveClientBtn = document.getElementById('saveClientBtn');
-        let petsArray = [];
+        let petsArray = []; // Array para guardar os dados dos pets
 
-        // Lógica para abrir modal e resetar
+        // --- Abrir/Fechar Modal Principal ---
+        if (clientModal) {
+            clientModal.querySelector('.close-modal-btn').addEventListener('click', () => clientModal.style.display = 'none');
+            clientModal.querySelector('.cancel-btn').addEventListener('click', () => clientModal.style.display = 'none');
 
+            addClientBtn.addEventListener('click', () => {
+                // Reseta tudo ao abrir o modal para um novo cadastro
+                clientForm.reset();
+                petForm.reset();
+                petList.innerHTML = '';
+                petsArray = [];
+                document.getElementById('pet-breed').innerHTML = '<option value="">Selecione a espécie primeiro</option>';
+                document.getElementById('pet-breed').disabled = true;
+                clientModal.style.display = 'flex';
+            });
+        }
 
-        // --- NOVA FUNCIONALIDADE: RAÇAS DINÂMICAS ---
+        // --- Funcionalidade: Raças Dinâmicas ---
         const petSpeciesSelect = document.getElementById('pet-species');
         const petBreedSelect = document.getElementById('pet-breed');
         const breeds = {
@@ -66,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // --- Lógica CORRIGIDA para adicionar pet na lista ---
+        // --- Funcionalidade: Adicionar Pet à Lista Temporária ---
         petForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const petData = {
@@ -76,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 nascimento: document.getElementById('pet-birthdate').value
             };
             if (petData.nome === '') { alert('O nome do pet é obrigatório.'); return; }
+            
             petsArray.push(petData);
             
             const listItem = document.createElement('li');
@@ -94,16 +125,23 @@ document.addEventListener('DOMContentLoaded', function() {
             petBreedSelect.disabled = true;
         });
         
-        // Lógica para remover o pet
+        // --- Funcionalidade: Remover Pet da Lista Temporária ---
         petList.addEventListener('click', (e) => {
             const removeBtn = e.target.closest('.remove-pet-btn');
             if (removeBtn) {
-                // Futuramente, podemos adicionar uma lógica mais complexa para remover do array
-                removeBtn.closest('.pet-list-item').remove();
+                const itemToRemove = removeBtn.closest('.pet-list-item');
+                const indexToRemove = parseInt(itemToRemove.dataset.index, 10);
+                
+                // Remove do array de dados
+                if (!isNaN(indexToRemove) && indexToRemove < petsArray.length) {
+                    petsArray.splice(indexToRemove, 1);
+                }
+                // Remove da lista visual
+                itemToRemove.remove();
             }
         });
 
-        // --- Lógica ATUALIZADA para salvar cliente ---
+        // --- Ação Principal: Salvar Cliente e Pets via Fetch ---
         saveClientBtn.addEventListener('click', function() {
             const clienteData = {
                 nome: document.getElementById('client-name').value.trim(),
@@ -116,7 +154,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 cidade: document.getElementById('client-city').value.trim(),
                 estado: document.getElementById('client-state').value.trim().toUpperCase()
             };
+
+            if (clienteData.nome === '') {
+                alert('O nome do cliente é obrigatório.');
+                return;
+            }
+
             const dataToSend = { cliente: clienteData, pets: petsArray };
+
             fetch('salvar_cliente.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -128,18 +173,33 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(result => {
                 alert(result.message);
-                if (result.success) location.reload();
+                if (result.success) {
+                    location.reload(); // Recarrega a página para mostrar o novo cliente
+                }
             })
             .catch(error => {
                 console.error('Erro na requisição fetch:', error);
-                alert('Ocorreu um erro de comunicação. Verifique o console (F12).');
+                alert('Ocorreu um erro de comunicação. Verifique o console (F12) para mais detalhes.');
             });
         });
 
-        // Lógica da busca dinâmica (já implementada)
+        // --- Funcionalidade: Filtro de Busca Dinâmica ---
         const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            // ... (código da busca, como antes) ...
+        const clientTableBody = document.getElementById('clientTableBody');
+        if(searchInput && clientTableBody) {
+            const tableRows = clientTableBody.getElementsByTagName('tr');
+            searchInput.addEventListener('input', function() {
+                const searchText = searchInput.value.toLowerCase();
+                for (let i = 0; i < tableRows.length; i++) {
+                    const row = tableRows[i];
+                    const rowText = row.textContent.toLowerCase();
+                    if (rowText.includes(searchText)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
         }
     }
 });
