@@ -34,17 +34,10 @@
                     <div class="form-group-row">
                         <div class="form-group">
                             <label for="pet-species">Espécie</label>
-                            <select id="pet-species">
-                                <option value="">Selecione</option>
-                                <option value="Cão">Cão</option>
-                                <option value="Gato">Gato</option>
-                            </select>
+                            <select id="pet-species"><option value="">Selecione</option><option value="Cão">Cão</option><option value="Gato">Gato</option></select>
                         </div>
-                        <div class="form-group">
-                            <label for="pet-breed">Raça</label>
-                            <select id="pet-breed" disabled>
-                                <option value="">Selecione a espécie primeiro</option>
-                            </select>
+                        <div class="form-group"><label for="pet-breed">Raça</label>
+                            <select id="pet-breed" disabled><option value="">Selecione a espécie primeiro</option></select>
                         </div>
                     </div>
                     <div class="form-group"><label for="pet-birthdate">Data de Nascimento</label><input type="date" id="pet-birthdate"></div>

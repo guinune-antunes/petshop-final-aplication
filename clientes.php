@@ -1,12 +1,9 @@
 <?php
-    // ATIVADOR DE ERROS PARA DEBUG
     ini_set('display_errors', 1);
     error_reporting(E_ALL);
 
-    // Inclui o arquivo de conexão para ter acesso à variável $pdo
     require_once 'conexao.php';
 
-    // Prepara e executa a consulta SQL para buscar clientes e contar seus pets
     $sql = "SELECT c.*, COUNT(p.id) AS total_pets 
             FROM clientes AS c 
             LEFT JOIN pets AS p ON c.id = p.cliente_id 
@@ -16,11 +13,9 @@
     $stmt = $pdo->query($sql);
     $clientes = $stmt->fetchAll();
 
-    // Define as variáveis da página
     $pageTitle = 'Clientes';
     $paginaAtiva = 'clientes';
 
-    // Inclui o cabeçalho do HTML
     include 'includes/_head.php';
 ?>
 
@@ -70,7 +65,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="5" style="text-align:center;">Nenhum cliente cadastrado ainda. Clique em "Novo Cliente" para começar.</td>
+                                    <td colspan="5" style="text-align:center;">Nenhum cliente cadastrado. Clique em "Novo Cliente" para começar.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -80,8 +75,11 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="client-modal" style="display: none;">
-        </div>
+    <?php 
+        // ESTA É A LINHA CRUCIAL QUE ESTAVA FALHANDO ANTES.
+        // ELA INCLUI O HTML DO MODAL NO FINAL DA PÁGINA.
+        include 'includes/_modal_cliente.php'; 
+    ?>
     
 <?php 
     include 'includes/_footer.php'; 
