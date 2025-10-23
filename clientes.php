@@ -58,9 +58,9 @@
                                         <td><?= htmlspecialchars($cliente['email']) ?></td>
                                         <td><?= $cliente['total_pets'] ?></td>
                                         <td class="action-buttons">
-                                            <button class="btn-icon btn-edit" title="Editar Cliente"><i class="fas fa-pencil-alt"></i></button>
-                                            <button class="btn-icon btn-delete" title="Excluir Cliente"><i class="fas fa-trash-alt"></i></button>
-                                        </td>
+                                             <button class="btn-icon btn-edit" title="Editar Cliente" data-id="<?= $cliente['id'] ?>"><i class="fas fa-pencil-alt"></i></button>
+                                             <button class="btn-icon btn-delete" title="Excluir Cliente" data-id="<?= $cliente['id'] ?>"><i class="fas fa-trash-alt"></i></button>
+                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
