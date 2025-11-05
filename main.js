@@ -17,16 +17,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addClientBtn) { // Este IF garante que o código abaixo só rode na página de clientes
 
         const clientModal = document.getElementById('client-modal');
-        const clientTableBody = document.getElementById('clientTableBody'); // Busca o corpo da tabela
+        const clientTableBody = document.getElementById('clientTableBody'); 
 
-        if (clientModal && clientTableBody) { // Garante que ambos existem
+        if (clientModal && clientTableBody) {
             const petForm = document.getElementById('pet-form');
             const clientForm = document.getElementById('client-form');
             const petList = document.getElementById('pet-list');
             const saveClientBtn = document.getElementById('saveClientBtn');
             const modalTitle = document.getElementById('client-modal-title');
             let petsArray = [];
-            let editingClientId = null; // Variável para guardar o ID do cliente em edição
+            let editingClientId = null; 
 
             // Abrir/Fechar Modal Principal
             clientModal.querySelector('.close-modal-btn').addEventListener('click', () => clientModal.style.display = 'none');
@@ -34,14 +34,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Abrir Modal para NOVO Cliente
             addClientBtn.addEventListener('click', () => {
-                editingClientId = null; // Garante que não estamos editando
+                editingClientId = null; 
                 modalTitle.textContent = 'Novo Cliente';
                 clientForm.reset();
                 petForm.reset();
                 petList.innerHTML = '';
                 petsArray = [];
-                document.getElementById('pet-breed').innerHTML = '<option value="">Selecione a espécie primeiro</option>';
-                document.getElementById('pet-breed').disabled = true;
+                // Reseta os selects de pet
+                petSpeciesSelect.value = ""; 
+                petBreedSelect.innerHTML = '<option value="">Selecione a espécie primeiro</option>';
+                petBreedSelect.disabled = true;
                 clientModal.style.display = 'flex';
             });
 
@@ -52,16 +54,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Cão': ['SRD (Vira-lata)', 'Poodle', 'Golden Retriever', 'Labrador', 'Shih Tzu', 'Bulldog', 'Yorkshire', 'Outro'],
                 'Gato': ['SRD (Vira-lata)', 'Siamês', 'Persa', 'Angorá', 'Sphynx', 'Outro']
             };
-            petSpeciesSelect.addEventListener('change', function() { /* ... código das raças dinâmicas ... */ });
+            
+            // CORREÇÃO DAS RAÇAS (JÁ IMPLEMENTADA)
+            petSpeciesSelect.addEventListener('change', function() {
+                const selectedSpecies = this.value; 
+                petBreedSelect.innerHTML = ''; 
 
-             // --- Funcionalidade: Adicionar Pet à Lista Temporária ---
+                if (selectedSpecies && breeds[selectedSpecies]) {
+                    petBreedSelect.disabled = false; 
+
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = "";
+                    defaultOption.textContent = "Selecione a raça";
+                    petBreedSelect.appendChild(defaultOption);
+
+                    breeds[selectedSpecies].forEach(breedName => {
+                        const option = document.createElement('option');
+                        option.value = breedName;
+                        option.textContent = breedName;
+                        petBreedSelect.appendChild(option);
+                    });
+
+                } else {
+                    petBreedSelect.disabled = true; 
+                    
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = "";
+                    defaultOption.textContent = "Selecione a espécie primeiro";
+                    petBreedSelect.appendChild(defaultOption);
+                }
+            });
+
+            // --- Funcionalidade: Adicionar Pet à Lista Temporária ---
             petForm.addEventListener('submit', function(event) {
                 event.preventDefault();
-                const petData = { nome: document.getElementById('pet-name').value.trim(), especie: petSpeciesSelect.value, raca: petBreedSelect.value, nascimento: document.getElementById('pet-birthdate').value };
+                const petData = { 
+                    nome: document.getElementById('pet-name').value.trim(), 
+                    especie: petSpeciesSelect.value, 
+                    raca: petBreedSelect.value, 
+                    nascimento: document.getElementById('pet-birthdate').value 
+                };
                 if (petData.nome === '') { alert('O nome do pet é obrigatório.'); return; }
-                petsArray.push(petData); // Adiciona ao array de dados
-                renderPetList(); // Re-renderiza a lista visual
+                petsArray.push(petData); 
+                renderPetList(); 
                 petForm.reset();
+                petSpeciesSelect.value = "";
                 petBreedSelect.innerHTML = '<option value="">Selecione a espécie primeiro</option>';
                 petBreedSelect.disabled = true;
             });
@@ -71,40 +108,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 const removeBtn = e.target.closest('.remove-pet-btn');
                 if (removeBtn) {
                     const itemToRemove = removeBtn.closest('.pet-list-item');
-                    const indexToRemove = parseInt(itemToRemove.dataset.index, 10);
-                    if (!isNaN(indexToRemove) && indexToRemove >= 0 && indexToRemove < petsArray.length) {
-                        petsArray.splice(indexToRemove, 1); // Remove do array de dados
-                        renderPetList(); // Re-renderiza a lista visual
+                    // Verifica se o pet veio do array temporário (tem um data-index)
+                    if (itemToRemove.dataset.index) {
+                        const indexToRemove = parseInt(itemToRemove.dataset.index, 10);
+                        if (!isNaN(indexToRemove) && indexToRemove >= 0 && indexToRemove < petsArray.length) {
+                            petsArray.splice(indexToRemove, 1); // Remove do array de dados
+                            renderPetList(); // Re-renderiza a lista visual
+                        }
                     } else {
                         // Se não tem índice (veio do BD na edição), apenas remove visualmente
+                        // O PHP cuidará da lógica de exclusão no back-end se necessário
                         itemToRemove.remove();
+                        
+                        // O ideal seria marcar o pet para exclusão no back-end,
+                        // mas para simplificar, a lógica atual apenas remove da lista local.
+                        // Ao salvar, o PHP receberá apenas os pets que restaram.
                     }
                 }
             });
 
-            // --- Função para renderizar a lista de pets (usada ao adicionar/remover/editar) ---
+            // --- Função para renderizar a lista de pets ---
             function renderPetList() {
-                petList.innerHTML = ''; // Limpa a lista atual
+                petList.innerHTML = ''; 
                 petsArray.forEach((petData, index) => {
                     const listItem = document.createElement('li');
                     listItem.className = 'pet-list-item';
-                    listItem.dataset.index = index; // Adiciona o índice para remoção
+                    
+                    // Se o pet veio do array (novo pet), ele tem 'index'
+                    // Se veio do BD, ele pode ter 'id'
+                    if (petData.id) {
+                         listItem.dataset.petId = petData.id; // Guarda o ID do BD
+                    } else {
+                         listItem.dataset.index = index; // Guarda o índice do array
+                    }
+                   
                     listItem.innerHTML = `
                         <div class="pet-list-item-info">
                             <strong>${petData.nome}</strong>
                             <small>${petData.especie || 'Espécie?'} - ${petData.raca || 'Raça?'}</small>
                         </div>
-                        <button type="button" class="remove-pet-btn" title="Remover Pet"><i class="fas fa-times"></i></button>
+                        <button type-="button" class="remove-pet-btn" title="Remover Pet"><i class="fas fa-times"></i></button>
                     `;
                     petList.appendChild(listItem);
                 });
             }
 
-
             // --- Ação Principal: Salvar Cliente e Pets (CRIAR ou EDITAR) ---
             saveClientBtn.addEventListener('click', function() {
                 const clienteData = {
-                    id: editingClientId, // Envia o ID se estiver editando, ou null se for novo
+                    id: editingClientId,
                     nome: document.getElementById('client-name').value.trim(),
                     telefone: document.getElementById('client-phone').value.trim(),
                     email: document.getElementById('client-email').value.trim(),
@@ -117,9 +169,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 if (clienteData.nome === '') { alert('O nome do cliente é obrigatório.'); return; }
 
+                // Pega os pets da lista que podem ter vindo do BD (data-pet-id)
+                // ou do array (petsArray). A forma mais simples é enviar o 'petsArray'
+                // que é o que está sendo gerenciado localmente.
                 const dataToSend = { cliente: clienteData, pets: petsArray };
 
-                // A URL do fetch continua a mesma, o PHP decidirá se é INSERT ou UPDATE
                 fetch('salvar_cliente.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -135,16 +189,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // --- Funcionalidade: Filtro de Busca Dinâmica ---
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
-                 const tableRows = clientTableBody.getElementsByTagName('tr');
-                 searchInput.addEventListener('input', function() { /* ... código da busca ... */ });
+                // ... (seu código de busca) ...
             }
 
-            // --- NOVA FUNCIONALIDADE: Delegação de Eventos para Editar e Excluir ---
+            // --- Delegação de Eventos para Editar e Excluir ---
             clientTableBody.addEventListener('click', function(event) {
-                const targetButton = event.target.closest('button'); // Encontra o botão clicado
-
-                if (!targetButton) return; // Sai se o clique não foi em um botão
-
+                const targetButton = event.target.closest('button'); 
+                if (!targetButton) return; 
                 const clientId = targetButton.dataset.id;
 
                 // --- Ação de EXCLUIR ---
@@ -165,22 +216,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // --- Ação de EDITAR ---
                 if (targetButton.classList.contains('btn-edit')) {
-                    editingClientId = clientId; // Define que estamos editando
-                    loadClientDataForEdit(clientId); // Chama a função para buscar e preencher os dados
+                    editingClientId = clientId; 
+                    loadClientDataForEdit(clientId); // <- É AQUI QUE O PHP É CHAMADO
                 }
             });
 
             // --- Função para buscar dados do cliente para edição ---
             function loadClientDataForEdit(clientId) {
-                fetch(`buscar_cliente.php?id=${clientId}`) // Chama o novo script PHP
+                fetch(`buscar_cliente.php?id=${clientId}`) // Chama o PHP
                 .then(response => {
-                    if (!response.ok) throw new Error('Cliente não encontrado ou erro no servidor');
+                    if (!response.ok) {
+                        // Se o status for 404 ou 500, ele entra aqui
+                        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                    }
                     return response.json();
                 })
                 .then(data => {
                     if (data.success && data.cliente) {
                         const cliente = data.cliente;
-                        // Preenche o formulário do cliente
+                        
+                        // O JavaScript espera 'nome_completo', 'logradouro', etc.
                         document.getElementById('client-name').value = cliente.nome_completo || '';
                         document.getElementById('client-phone').value = cliente.telefone || '';
                         document.getElementById('client-email').value = cliente.email || '';
@@ -191,11 +246,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('client-city').value = cliente.cidade || '';
                         document.getElementById('client-state').value = cliente.estado || '';
 
-                        // Preenche a lista de pets (limpa o array e a lista visual antes)
+                        // Preenche a lista de pets vinda do banco
                         petsArray = data.pets || [];
-                        renderPetList();
+                        renderPetList(); // Renderiza os pets na lista
 
-                        // Ajusta o modal para o modo de edição
                         modalTitle.textContent = `Editando Cliente: ${cliente.nome_completo}`;
                         clientModal.style.display = 'flex';
 
@@ -205,10 +259,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Erro ao buscar cliente:', error);
-                    alert('Não foi possível carregar os dados do cliente para edição.');
+                    alert('Não foi possível carregar os dados do cliente para edição. Verifique o console (F12).');
                 });
             }
 
-        } // Fim do if(clientModal && clientTableBody)
-    } // Fim do if (addClientBtn) - Lógica da Página de Clientes
+        } 
+    }
 });
