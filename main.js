@@ -108,7 +108,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const removeBtn = e.target.closest('.remove-pet-btn');
                 if (removeBtn) {
                     const itemToRemove = removeBtn.closest('.pet-list-item');
-                    // Verifica se o pet veio do array temporário (tem um data-index)
                     if (itemToRemove.dataset.index) {
                         const indexToRemove = parseInt(itemToRemove.dataset.index, 10);
                         if (!isNaN(indexToRemove) && indexToRemove >= 0 && indexToRemove < petsArray.length) {
@@ -116,13 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             renderPetList(); // Re-renderiza a lista visual
                         }
                     } else {
-                        // Se não tem índice (veio do BD na edição), apenas remove visualmente
-                        // O PHP cuidará da lógica de exclusão no back-end se necessário
                         itemToRemove.remove();
-                        
-                        // O ideal seria marcar o pet para exclusão no back-end,
-                        // mas para simplificar, a lógica atual apenas remove da lista local.
-                        // Ao salvar, o PHP receberá apenas os pets que restaram.
                     }
                 }
             });
@@ -134,14 +127,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const listItem = document.createElement('li');
                     listItem.className = 'pet-list-item';
                     
-                    // Se o pet veio do array (novo pet), ele tem 'index'
-                    // Se veio do BD, ele pode ter 'id'
                     if (petData.id) {
                          listItem.dataset.petId = petData.id; // Guarda o ID do BD
                     } else {
                          listItem.dataset.index = index; // Guarda o índice do array
                     }
-                   
+                    
                     listItem.innerHTML = `
                         <div class="pet-list-item-info">
                             <strong>${petData.nome}</strong>
@@ -169,9 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 if (clienteData.nome === '') { alert('O nome do cliente é obrigatório.'); return; }
 
-                // Pega os pets da lista que podem ter vindo do BD (data-pet-id)
-                // ou do array (petsArray). A forma mais simples é enviar o 'petsArray'
-                // que é o que está sendo gerenciado localmente.
                 const dataToSend = { cliente: clienteData, pets: petsArray };
 
                 fetch('salvar_cliente.php', {
@@ -186,11 +174,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     }).catch(err => { console.error('Fetch error:', err); alert('Erro de comunicação.'); });
             });
 
+            // ===== INÍCIO DA CORREÇÃO =====
             // --- Funcionalidade: Filtro de Busca Dinâmica ---
             const searchInput = document.getElementById('searchInput');
+            
             if (searchInput) {
-                // ... (seu código de busca) ...
+                // Pega todas as linhas da tabela UMA VEZ
+                const tableRows = clientTableBody.getElementsByTagName('tr');
+
+                // Adiciona o "escutador" para o evento 'input'
+                searchInput.addEventListener('input', function() {
+                    
+                    // 1. Pega o termo de busca e normaliza (minúsculas)
+                    const searchTerm = searchInput.value.toLowerCase();
+
+                    // 2. Itera (passa por) todas as linhas da tabela
+                    for (const row of tableRows) {
+                        
+                        // 3. Pega todo o texto da linha e normaliza (minúsculas)
+                        const rowText = row.textContent.toLowerCase();
+
+                        // 4. Verifica se o texto da linha INCLUI o termo de busca
+                        if (rowText.includes(searchTerm)) {
+                            // Se incluir, mostra a linha
+                            row.style.display = ""; // "" reseta para o padrão (table-row)
+                        } else {
+                            // Se NÃO incluir, esconde a linha
+                            row.style.display = "none";
+                        }
+                    }
+                });
             }
+            // ===== FIM DA CORREÇÃO =====
 
             // --- Delegação de Eventos para Editar e Excluir ---
             clientTableBody.addEventListener('click', function(event) {
@@ -226,7 +241,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch(`buscar_cliente.php?id=${clientId}`) // Chama o PHP
                 .then(response => {
                     if (!response.ok) {
-                        // Se o status for 404 ou 500, ele entra aqui
                         throw new Error(`Erro ${response.status}: ${response.statusText}`);
                     }
                     return response.json();
