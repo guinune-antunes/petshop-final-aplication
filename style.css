@@ -403,7 +403,76 @@ body {
 
 /* Grid do Calendário */
 
+.appointment-card {
+    position: absolute;
+    color: #ffffff; /* Texto branco fica bom na maioria dos fundos */
+    padding: 4px 8px; /* Garante um espaçamento interno */
+    overflow: hidden; /* **A CORREÇÃO DO BUG**: Esconde o que vazar */
+    box-sizing: border-box; /* Garante que o padding não estoure a altura */
+    font-size: 0.9em; /* Um pouco menor para caber mais */
+    border-radius: 4px;
+    /* Uma sombra suave para destacar */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
 
+/* Estilos para o texto dentro do card */
+.appointment-card p,
+.appointment-card small {
+    margin: 0;
+    line-height: 1.3;
+    white-space: nowrap; /* **A CORREÇÃO DO BUG**: Não quebra a linha */
+    overflow: hidden; /* Esconde o que vazar */
+    text-overflow: ellipsis; /* **A CORREÇÃO DO BUG**: Adiciona "..." */
+}
+
+.appointment-card p.pet-name {
+    font-weight: bold;
+}
+
+.appointment-card small {
+    font-size: 0.85em;
+    opacity: 0.9;
+}
+
+
+/* --- AS NOVAS CLASSES DE CORES --- */
+
+/* Cor Padrão (para serviços não mapeados) */
+.service-default {
+    background-color: #6c757d; /* Cinza */
+    border-left: 3px solid #545b62;
+}
+
+/* Banho */
+.service-banho {
+    background-color: #007bff; /* Azul */
+    border-left: 3px solid #0056b3;
+}
+
+/* Banho e Tosa */
+.service-banho-e-tosa {
+    background-color: #28a745; /* Verde */
+    border-left: 3px solid #1e7e34;
+}
+
+/* Tosa Higiênica */
+.service-tosa-higiênica {
+    background-color: #17a2b8; /* Ciano */
+    border-left: 3px solid #117a8b;
+}
+
+/* Consulta Veterinária */
+.service-consulta-veterinária {
+    background-color: #dc3545; /* Vermelho */
+    border-left: 3px solid #b21f2d;
+}
+
+/* Vacina */
+.service-vacina {
+    background-color: #ffc107; /* Amarelo */
+    border-left: 3px solid #d39e00;
+    color: #212529; /* Texto escuro para o amarelo */
+}
 
 .calendar-grid-container {
     display: flex;
@@ -467,8 +536,14 @@ body {
 .appointments {
     position: relative;
     height: 100%;
+    width: 100%;
 }
-
+.appointment-card.status-remarcado {
+    background-color: #f8f9fa; /* Fundo cinza claro */
+    border-left: 3px solid #6c757d;
+    color: #6c757d; /* Texto cinza */
+    opacity: 0.7; /* Deixa transparente */
+}
 .appointment-card {
     position: absolute;
     left: 5px;
@@ -484,7 +559,10 @@ body {
 .appointment-card .pet-name { font-weight: 600; }
 .appointment-card .service-name { margin: 2px 0; }
 .appointment-card small { opacity: 0.8; }
-
+.appointment-card.status-remarcado p,
+.appointment-card.status-remarcado small {
+    color: #6c757d;
+}
 /* Cores por serviço */
 .service-bath { background-color: #3498db; }
 .service-grooming { background-color: #9b59b6; }

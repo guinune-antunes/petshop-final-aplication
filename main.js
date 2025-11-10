@@ -1,12 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- LÓGICA DO MODAL DA AGENDA (JÁ IMPLEMENTADA) ---
+ // --- LÓGICA DO MODAL DA AGENDA ---
     const addAppointmentBtn = document.getElementById('add-appointment-btn');
     const appointmentModal = document.getElementById('appointment-modal');
     
-    // Verifica se estamos na página da agenda
     if (addAppointmentBtn && appointmentModal) {
         
+        // --- Pegamos o container da grade ---
+        const calendarGrid = document.querySelector('.calendar-grid');
+        
+        // --- IDs dos campos do modal ---
+        const modalTitle = appointmentModal.querySelector('.modal-header h2');
         const closeModalBtn = appointmentModal.querySelector('.close-modal-btn');
         const cancelBtn = document.getElementById('cancel-app-btn');
         const saveBtn = document.getElementById('save-app-btn');
@@ -14,26 +18,98 @@ document.addEventListener('DOMContentLoaded', function() {
         const petSelect = document.getElementById('app-pet');
         const appointmentForm = document.getElementById('appointment-form-content');
 
-        // Função para abrir o modal
-        function openModal() {
-            appointmentForm.reset(); // Limpa o formulário
+        // --- Variável de estado ---
+        let modoModal = 'novo';
+        let idAgendamentoAntigo = null;
+
+        // --- Função para ABRIR modal (NOVO AGENDAMENTO) ---
+        function openModalNovo() {
+            modoModal = 'novo';
+            idAgendamentoAntigo = null; // Limpa o ID
+            
+            modalTitle.textContent = 'Novo Agendamento'; // Título padrão
+            appointmentForm.reset(); 
             petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
             petSelect.disabled = true;
             appointmentModal.style.display = 'flex';
         }
 
-        // Função para fechar o modal
+        // --- Função para ABRIR modal (REMARCAR) ---
+        function openModalRemarcar(card) {
+            modoModal = 'remarcar';
+            const dados = card.dataset;
+            idAgendamentoAntigo = dados.id; // Armazena o ID do card clicado
+
+            modalTitle.textContent = 'Editar / Remarcar Agendamento';
+
+            // 1. Preenche os campos fáceis
+            clientSelect.value = dados.clienteId;
+            document.getElementById('app-service').value = dados.servico;
+            document.getElementById('app-date').value = dados.date;
+            document.getElementById('app-time').value = dados.time;
+            document.getElementById('app-professional').value = dados.profissional;
+            document.getElementById('app-notes').value = dados.obs;
+            
+            // 2. Preenche os pets (o campo mais difícil)
+            petSelect.innerHTML = '<option value="">Carregando pets...</option>';
+            petSelect.disabled = true;
+
+            // Busca os pets daquele cliente
+            fetch(`buscar_pets_cliente.php?cliente_id=${dados.clienteId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.pets.length > 0) {
+                        petSelect.innerHTML = '<option value="">Selecione um pet...</option>';
+                        data.pets.forEach(pet => {
+                            const option = document.createElement('option');
+                            option.value = pet.id;
+                            option.textContent = pet.nome;
+                            petSelect.appendChild(option);
+                        });
+                        
+                        // 3. Seleciona o pet correto
+                        petSelect.value = dados.petId; 
+                        petSelect.disabled = false;
+                    } else {
+                        petSelect.innerHTML = '<option value="">Cliente sem pets</option>';
+                    }
+                })
+                .catch(err => petSelect.innerHTML = '<option value="">Erro ao buscar pets</option>');
+
+            // 4. Abre o modal
+            appointmentModal.style.display = 'flex';
+        }
+
+        // --- Função para FECHAR o modal ---
         function closeModal() {
             appointmentModal.style.display = 'none';
         }
 
-        // Eventos para abrir e fechar
-        addAppointmentBtn.addEventListener('click', openModal);
+        // --- EVENTOS DE ABRIR/FECHAR ---
+
+        // 1. Botão "Adicionar Agendamento"
+        addAppointmentBtn.addEventListener('click', openModalNovo);
+        
+        // 2. Clicar em um Card existente (Delegação de evento)
+        calendarGrid.addEventListener('click', function(e) {
+            const card = e.target.closest('.appointment-card');
+            if (card) {
+                // Não abre o modal se o card já foi remarcado
+                if (card.classList.contains('status-remarcado')) {
+                    return; 
+                }
+                openModalRemarcar(card);
+            }
+        });
+
+        // 3. Botões de fechar
         closeModalBtn.addEventListener('click', closeModal);
         cancelBtn.addEventListener('click', closeModal);
 
-        // --- Evento DINÂMICO: Buscar Pets ao selecionar Cliente ---
+        // --- Evento DINÂMICO: Buscar Pets (Sem mudanças) ---
         clientSelect.addEventListener('change', function() {
+            // ... (seu código existente de buscar pets)...
+            // (Este código continua funcionando perfeitamente)
             const clienteId = this.value;
             petSelect.innerHTML = '<option value="">Carregando...</option>';
             petSelect.disabled = true;
@@ -43,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Chama o novo arquivo PHP
             fetch(`buscar_pets_cliente.php?cliente_id=${clienteId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -68,10 +143,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
 
-        // --- Evento: Salvar Agendamento ---
+        // --- Evento: Botão SALVAR / REMARCAR (LÓGICA UNIFICADA) ---
         saveBtn.addEventListener('click', function() {
             // Pega os dados do formulário
-            const data = {
+            const dadosFormulario = {
                 cliente_id: clientSelect.value,
                 pet_id: petSelect.value,
                 servico: document.getElementById('app-service').value,
@@ -81,24 +156,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 observacoes: document.getElementById('app-notes').value
             };
 
-            // Validação simples
-            if (!data.cliente_id || !data.pet_id || !data.servico || !data.date || !data.time) {
+            // Validação
+            if (!dadosFormulario.cliente_id || !dadosFormulario.pet_id || !dadosFormulario.servico || !dadosFormulario.date || !dadosFormulario.time) {
                 alert('Por favor, preencha os campos obrigatórios (Cliente, Pet, Serviço, Data, Hora).');
                 return;
             }
+            
+            let url = '';
+            let body = {};
 
-            // Envia para o novo arquivo PHP
-            fetch('salvar_agendamento.php', {
+            // Decide qual script PHP chamar
+            if (modoModal === 'remarcar') {
+                url = 'remarcar_agendamento.php';
+                body = {
+                    id_antigo: idAgendamentoAntigo,
+                    novos_dados: dadosFormulario
+                };
+            } else { // modoModal === 'novo'
+                url = 'salvar_agendamento.php';
+                body = dadosFormulario; // O script 'salvar_agendamento' espera os dados direto
+            }
+
+            // Envia para o PHP
+            fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(body)
             })
             .then(response => response.json())
             .then(result => {
                 alert(result.message);
                 if (result.success) {
                     closeModal();
-                    location.reload(); // Recarrega a página para mostrar o novo agendamento
+                    location.reload(); // Recarrega a página
                 }
             })
             .catch(err => {
