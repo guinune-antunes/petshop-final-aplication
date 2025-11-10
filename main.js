@@ -1,16 +1,121 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // --- LÓGICA DO MODAL DA AGENDA (JÁ IMPLEMENTADA) ---
+    const addAppointmentBtn = document.getElementById('add-appointment-btn');
+    const appointmentModal = document.getElementById('appointment-modal');
+    
+    // Verifica se estamos na página da agenda
+    if (addAppointmentBtn && appointmentModal) {
+        
+        const closeModalBtn = appointmentModal.querySelector('.close-modal-btn');
+        const cancelBtn = document.getElementById('cancel-app-btn');
+        const saveBtn = document.getElementById('save-app-btn');
+        const clientSelect = document.getElementById('app-client');
+        const petSelect = document.getElementById('app-pet');
+        const appointmentForm = document.getElementById('appointment-form-content');
+
+        // Função para abrir o modal
+        function openModal() {
+            appointmentForm.reset(); // Limpa o formulário
+            petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+            petSelect.disabled = true;
+            appointmentModal.style.display = 'flex';
+        }
+
+        // Função para fechar o modal
+        function closeModal() {
+            appointmentModal.style.display = 'none';
+        }
+
+        // Eventos para abrir e fechar
+        addAppointmentBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        // --- Evento DINÂMICO: Buscar Pets ao selecionar Cliente ---
+        clientSelect.addEventListener('change', function() {
+            const clienteId = this.value;
+            petSelect.innerHTML = '<option value="">Carregando...</option>';
+            petSelect.disabled = true;
+
+            if (!clienteId) {
+                petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+                return;
+            }
+
+            // Chama o novo arquivo PHP
+            fetch(`buscar_pets_cliente.php?cliente_id=${clienteId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.pets.length > 0) {
+                        petSelect.innerHTML = '<option value="">Selecione um pet...</option>';
+                        data.pets.forEach(pet => {
+                            const option = document.createElement('option');
+                            option.value = pet.id;
+                            option.textContent = pet.nome;
+                            petSelect.appendChild(option);
+                        });
+                        petSelect.disabled = false;
+                    } else if (data.success && data.pets.length === 0) {
+                        petSelect.innerHTML = '<option value="">Este cliente não tem pets</option>';
+                    } else {
+                        petSelect.innerHTML = '<option value="">Erro ao buscar pets</option>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err);
+                    petSelect.innerHTML = '<option value="">Erro de conexão</option>';
+                });
+        });
+
+        // --- Evento: Salvar Agendamento ---
+        saveBtn.addEventListener('click', function() {
+            // Pega os dados do formulário
+            const data = {
+                cliente_id: clientSelect.value,
+                pet_id: petSelect.value,
+                servico: document.getElementById('app-service').value,
+                date: document.getElementById('app-date').value,
+                time: document.getElementById('app-time').value,
+                profissional: document.getElementById('app-professional').value,
+                observacoes: document.getElementById('app-notes').value
+            };
+
+            // Validação simples
+            if (!data.cliente_id || !data.pet_id || !data.servico || !data.date || !data.time) {
+                alert('Por favor, preencha os campos obrigatórios (Cliente, Pet, Serviço, Data, Hora).');
+                return;
+            }
+
+            // Envia para o novo arquivo PHP
+            fetch('salvar_agendamento.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+                if (result.success) {
+                    closeModal();
+                    location.reload(); // Recarrega a página para mostrar o novo agendamento
+                }
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                alert('Erro de comunicação ao salvar.');
+            });
+        });
+
+    } // Fim do if (estamos na página da agenda)
+
     // --- LÓGICA DO MODO ESCURO (GLOBAL) ---
     const themeToggleBtn = document.getElementById('theme-toggle');
     if (themeToggleBtn) {
         // ... (código do modo escuro, como antes) ...
     }
-
-    // --- LÓGICA DO MODAL DA AGENDA (SÓ RODA NA PÁGINA DA AGENDA) ---
-    const addAppointmentBtn = document.getElementById('add-appointment-btn');
-    if (addAppointmentBtn) {
-        // ... (código do modal da agenda, como antes) ...
-    }
+    
+    // ===== BLOCO DUPLICADO REMOVIDO DAQUI =====
 
     // --- LÓGICA DA PÁGINA DE CLIENTES E PETS ---
     const addClientBtn = document.getElementById('add-client-btn');
@@ -146,19 +251,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // --- Ação Principal: Salvar Cliente e Pets (CRIAR ou EDITAR) ---
             saveClientBtn.addEventListener('click', function() {
-                const clienteData = {
+const clienteData = {
                     id: editingClientId,
-                    nome: document.getElementById('client-name').value.trim(),
+                    // Corrigido para 'nome_completo'
+                    nome_completo: document.getElementById('client-name').value.trim(),
                     telefone: document.getElementById('client-phone').value.trim(),
                     email: document.getElementById('client-email').value.trim(),
                     cep: document.getElementById('client-cep').value.trim(),
-                    rua: document.getElementById('client-street').value.trim(),
+                    // Corrigido para 'logradouro'
+                    logradouro: document.getElementById('client-street').value.trim(),
                     numero: document.getElementById('client-number').value.trim(),
                     bairro: document.getElementById('client-neighborhood').value.trim(),
                     cidade: document.getElementById('client-city').value.trim(),
                     estado: document.getElementById('client-state').value.trim().toUpperCase()
                 };
-                if (clienteData.nome === '') { alert('O nome do cliente é obrigatório.'); return; }
+
+                // O JavaScript estava validando a chave 'nome', que agora não existe.
+                // Devemos validar 'nome_completo'.
+                if (clienteData.nome_completo === '') { 
+                    alert('O nome do cliente é obrigatório.'); 
+                    return; 
+                }
 
                 const dataToSend = { cliente: clienteData, pets: petsArray };
 
@@ -174,7 +287,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }).catch(err => { console.error('Fetch error:', err); alert('Erro de comunicação.'); });
             });
 
-            // ===== INÍCIO DA CORREÇÃO =====
             // --- Funcionalidade: Filtro de Busca Dinâmica ---
             const searchInput = document.getElementById('searchInput');
             
@@ -205,7 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
-            // ===== FIM DA CORREÇÃO =====
 
             // --- Delegação de Eventos para Editar e Excluir ---
             clientTableBody.addEventListener('click', function(event) {
