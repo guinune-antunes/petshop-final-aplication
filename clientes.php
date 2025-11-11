@@ -90,42 +90,42 @@ $clientes = $stmt_clientes->fetchAll();
                 
                 <div class="form-group span-2">
                     <label for="client-name">Nome Completo *</label>
-                    <input type="text" id="client-name" required>
+                    <input type="text" id="client-name" name="client-name" required>
                 </div>
                 <div class="form-group span-2">
                     <label for="client-phone">Telefone *</label>
-                    <input type="tel" id="client-phone" required>
+                    <input type="tel" id="client-phone" name="client-phone" required>
                 </div>
                 <div class="form-group span-4">
                     <label for="client-email">Email</label>
-                    <input type="email" id="client-email">
+                    <input type="email" id="client-email" name="client-email">
                 </div>
                 
                 <h3 class="form-section-title">Endereço</h3>
                 
                 <div class="form-group span-2">
                     <label for="client-cep">CEP</label>
-                    <input type="text" id="client-cep">
+                    <input type="text" id="client-cep" name="client-cep">
                 </div>
                 <div class="form-group span-2">
                     <label for="client-street">Logradouro (Rua/Av)</label>
-                    <input type="text" id="client-street">
+                    <input type="text" id="client-street" name="client-street">
                 </div>
                 <div class="form-group span-1">
                     <label for="client-number">Número</label>
-                    <input type="text" id="client-number">
+                    <input type="text" id="client-number" name="client-number">
                 </div>
                 <div class="form-group span-3">
                     <label for="client-neighborhood">Bairro</label>
-                    <input type="text" id="client-neighborhood">
+                    <input type="text" id="client-neighborhood" name="client-neighborhood">
                 </div>
                 <div class="form-group span-3">
                     <label for="client-city">Cidade</label>
-                    <input type="text" id="client-city">
+                    <input type="text" id="client-city" name="client-city">
                 </div>
                 <div class="form-group span-1">
                     <label for="client-state">Estado (UF)</label>
-                    <input type="text" id="client-state" maxlength="2">
+                    <input type="text" id="client-state" name="client-state" maxlength="2">
                 </div>
             </form>
 
@@ -134,11 +134,11 @@ $clientes = $stmt_clientes->fetchAll();
                 <form id="pet-form" class="pet-form-grid">
                     <div class="form-group">
                         <label for="pet-name">Nome do Pet *</label>
-                        <input type="text" id="pet-name">
+                        <input type="text" id="pet-name" name="pet-name">
                     </div>
                     <div class="form-group">
                         <label for="pet-species">Espécie</label>
-                        <select id="pet-species">
+                        <select id="pet-species" name="pet-species">
                             <option value="">Selecione...</option>
                             <option value="Cão">Cão</option>
                             <option value="Gato">Gato</option>
@@ -146,19 +146,19 @@ $clientes = $stmt_clientes->fetchAll();
                     </div>
                     <div class="form-group">
                         <label for="pet-breed">Raça</label>
-                        <select id="pet-breed" disabled>
+                        <select id="pet-breed" name="pet-breed" disabled>
                             <option value="">Selecione a espécie</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="pet-birthdate">Nascimento</label>
-                        <input type="date" id="pet-birthdate">
+                        <input type="date" id="pet-birthdate" name="pet-birthdate">
                     </div>
                     <button type="submit" class="btn btn-secondary btn-add-pet">Adicionar Pet</button>
                 </form>
 
                 <ul class="pet-list-container" id="pet-list">
-                    </ul>
+                </ul>
             </div>
 
         </div>
