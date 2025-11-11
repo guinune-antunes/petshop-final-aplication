@@ -1,7 +1,7 @@
 <?php
 // Define o título da página e qual item do menu deve ficar ativo
-$pageTitle = 'Clientes';
-$paginaAtiva = 'clientes';
+$pageTitle = 'Agenda';
+$paginaAtiva = 'agenda';
 
 // Inclui o cabeçalho do HTML
 include 'includes/_head.php';
@@ -9,9 +9,99 @@ include 'includes/_head.php';
 // --- LÓGICA DE BUSCA DE DADOS ---
 require 'conexao.php'; // Usa $pdo
 
-// Pega os dados dos clientes para a tabela
-$stmt_clientes = $pdo->query("SELECT * FROM clientes ORDER BY nome_completo");
+// --- LÓGICA DE NAVEGAÇÃO DE DATAS ---
+
+// 1. Define a data base (âncora)
+if (isset($_GET['data_base']) && !empty($_GET['data_base'])) {
+    $dataBase = $_GET['data_base'];
+} else {
+    $dataBase = date('Y-m-d'); // Padrão: hoje
+}
+
+// 2. Calcula os Timestamps para as âncoras
+$timestampBase = strtotime($dataBase);
+$diaDaSemanaBase = date('N', $timestampBase); // 1 (Seg) a 7 (Dom)
+
+// 3. Calcula o início e o fim da semana com base na data âncora
+$inicioSemana = date('Y-m-d 00:00:00', strtotime('-' . ($diaDaSemanaBase - 1) . ' days', $timestampBase));
+$fimSemana = date('Y-m-d 23:59:59', strtotime('+' . (7 - $diaDaSemanaBase) . ' days', $timestampBase));
+
+// 4. Calcula os links para os botões de navegação
+$linkSemanaAnterior = date('Y-m-d', strtotime('-7 days', $timestampBase));
+$linkSemanaSeguinte = date('Y-m-d', strtotime('+7 days', $timestampBase));
+
+// 5. Calcula o texto do display (Ex: 10 Nov - 16 Nov, 2025)
+$displayRange = date('d M', strtotime($inicioSemana)) . ' - ' . date('d M, Y', strtotime($fimSemana));
+
+// --- FIM DA LÓGICA DE DATAS ---
+
+
+// Pega os dados dos clientes para o modal
+$stmt_clientes = $pdo->query("SELECT id, nome_completo FROM clientes ORDER BY nome_completo");
 $clientes = $stmt_clientes->fetchAll();
+
+// Pega os agendamentos desta semana
+$sql_ag = "SELECT a.*, p.nome AS pet_nome, c.nome_completo AS cliente_nome 
+           FROM agendamentos a
+           JOIN pets p ON a.pet_id = p.id
+           JOIN clientes c ON a.cliente_id = c.id
+           WHERE a.data_hora_inicio BETWEEN ? AND ?
+           ORDER BY a.data_hora_inicio";
+$stmt_ag = $pdo->prepare($sql_ag);
+$stmt_ag->execute([$inicioSemana, $fimSemana]); // Usa as datas dinâmicas
+$agendamentos = $stmt_ag->fetchAll();
+
+// Separa os agendamentos por dia da semana
+$agendamentosPorDia = [1 => [], 2 => [], 3 => [], 4 => [], 5 => [], 6 => [], 7 => []];
+foreach ($agendamentos as $ag) {
+    $diaDaSemana = date('N', strtotime($ag['data_hora_inicio']));
+    $agendamentosPorDia[$diaDaSemana][] = $ag;
+}
+
+// Funções de cálculo de layout da agenda
+function calcularPosicao($datetime) {
+    $hora = (int)date('H', strtotime($datetime));
+    $minuto = (int)date('i', strtotime($datetime));
+    $offsetInicio = 8; // A grade começa às 08:00
+    $alturaHora = 60; // Cada hora na grade tem 60px
+    $posicao = (($hora - $offsetInicio) * $alturaHora) + ($minuto);
+    return max(0, $posicao);
+}
+
+function calcularAltura($inicio, $fim) {
+    $timestampInicio = strtotime($inicio);
+    $timestampFim = strtotime($fim);
+    $diferencaMinutos = ($timestampFim - $timestampInicio) / 60;
+    return $diferencaMinutos; // 1 minuto = 1px
+}
+
+/**
+ * Mapeia um agendamento para uma classe CSS de cor.
+ * (CORRIGIDO: Recebe $agendamento, não $servico)
+ */
+function getServiceClass($agendamento) {
+    // 1. Verifica o STATUS primeiro
+    if ($agendamento['status'] == 'Remarcado') {
+        return 'status-remarcado';
+    }
+
+    // 2. Se não, usa a lógica de cor do SERVIÇO
+    // (CORRIGIDO: Verifica $agendamento['servico'])
+    switch ($agendamento['servico']) {
+        case 'Banho':
+            return 'service-banho';
+        case 'Banho e Tosa':
+            return 'service-banho-e-tosa';
+        case 'Tosa Higiênica':
+            return 'service-tosa-higiênica';
+        case 'Consulta Veterinária':
+            return 'service-consulta-veterinária';
+        case 'Vacina':
+            return 'service-vacina';
+        default:
+            return 'service-default';
+    }
+}
 ?>
 
 <?php include 'includes/_sidebar.php'; // Inclui a barra lateral de navegação ?>
@@ -22,146 +112,161 @@ $clientes = $stmt_clientes->fetchAll();
 
         <main class="main-content">
             <div class="page-header">
-                <h1 class="main-title">Clientes</h1>
-                <div class="page-controls">
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar cliente...">
+                <h1 class="main-title">Agenda</h1>
+                <div class="calendar-controls">
+                    
+                    <div class="date-nav">
+                        <a href="agenda.php?data_base=<?php echo $linkSemanaAnterior; ?>" class="btn btn-icon" title="Semana Anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="agenda.php" class="btn btn-secondary">Hoje</a>
+                        <a href="agenda.php?data_base=<?php echo $linkSemanaSeguinte; ?>" class="btn btn-icon" title="Próxima Semana">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
                     </div>
-                    <button class="btn btn-primary" id="add-client-btn">
-                        <i class="fas fa-plus"></i> Adicionar Cliente
-                    </button>
+                    <span class="current-date-range"><?php echo $displayRange; ?></span>
+                    
+                    <button class="btn btn-primary" id="add-appointment-btn"><i class="fas fa-plus"></i> Adicionar Agendamento</button>
                 </div>
             </div>
 
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Telefone</th>
-                            <th>Email</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clientTableBody">
-                        <?php foreach ($clientes as $cliente): ?>
-                            <tr data-id="<?php echo $cliente['id']; ?>">
-                                <td><?php echo htmlspecialchars($cliente['nome_completo']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['telefone']); ?></td>
-                                <td><?php echo htmlspecialchars($cliente['email']); ?></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-icon btn-edit" data-id="<?php echo $cliente['id']; ?>" title="Editar">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
-                                        <button class="btn-icon btn-delete" data-id="<?php echo $cliente['id']; ?>" title="Excluir">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <div class="calendar-grid-container">
+                <div class="time-column">
+                    <div class="time-slot">08:00</div>
+                    <div class="time-slot">09:00</div>
+                    <div class="time-slot">10:00</div>
+                    <div class="time-slot">11:00</div>
+                    <div class="time-slot">12:00</div>
+                    <div class="time-slot">13:00</div>
+                    <div class="time-slot">14:00</div>
+                    <div class="time-slot">15:00</div>
+                    <div class="time-slot">16:00</div>
+                    <div class="time-slot">17:00</div>
+                    <div class="time-slot">18:00</div>
+                </div>
+                <div class="calendar-grid">
+                    
+                    <?php for ($i = 0; $i < 7; $i++): 
+                        $dataDoDiaTimestamp = strtotime($inicioSemana . ' +' . $i . ' days');
+                        $dataDoDia = date('Y-m-d', $dataDoDiaTimestamp);
+                        
+                        $dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                        $diaFormatado = $dias[date('w', $dataDoDiaTimestamp)] . ' ' . date('d', $dataDoDiaTimestamp);
+                        
+                        $isHoje = (date('Y-m-d') == $dataDoDia) ? 'current' : '';
+                        $diaDaSemana = date('N', $dataDoDiaTimestamp); // 1-7
+                    ?>
+                    <div class="day-column">
+                        <div class="day-header <?php echo $isHoje; ?>"><?php echo $diaFormatado; ?></div>
+                        <div class="appointments">
+                            
+                            <?php foreach ($agendamentosPorDia[$diaDaSemana] as $ag): 
+                                $top = calcularPosicao($ag['data_hora_inicio']);
+                                $height = calcularAltura($ag['data_hora_inicio'], $ag['data_hora_fim']);
+                                
+                                // (CORRIGIDO: Passa $ag, não $ag['servico'])
+                                $classeServico = getServiceClass($ag); 
+                                
+                                // Prepara os dados para o JavaScript
+                                $data_iso = date('Y-m-d', strtotime($ag['data_hora_inicio']));
+                                $hora_iso = date('H:i', strtotime($ag['data_hora_inicio']));
+                            ?>
+                                <button type="button" 
+                                    class="appointment-card <?php echo $classeServico; ?>" 
+                                    style="top: <?php echo $top; ?>px; height: <?php echo $height; ?>px;"
+                                    
+                                    data-id="<?php echo $ag['id']; ?>"
+                                    data-cliente-id="<?php echo $ag['cliente_id']; ?>"
+                                    data-pet-id="<?php echo $ag['pet_id']; ?>"
+                                    data-servico="<?php echo htmlspecialchars($ag['servico']); ?>"
+                                    data-profissional="<?php echo htmlspecialchars($ag['profissional']); ?>"
+                                    data-date="<?php echo $data_iso; ?>"
+                                    data-time="<?php echo $hora_iso; ?>"
+                                    data-obs="<?php echo htmlspecialchars($ag['observacoes']); ?>"
+                                >
+                                    <p class="pet-name"><?php echo htmlspecialchars($ag['pet_nome']); ?></p>
+                                    <p class="service-name"><?php echo htmlspecialchars($ag['servico']); ?></p>
+                                    <small>Tutor: <?php echo htmlspecialchars($ag['cliente_nome']); ?></small>
+                                </button>
+                            <?php endforeach; ?>
+                            </div>
+                    </div>
+                    <?php endfor; ?>
+                    </div>
             </div>
 
         </main>
     </div>
 </div>
 
-<div class="modal-overlay" id="client-modal" style="display: none;">
-    <div class="modal-content modal-lg"> <div class="modal-header">
-            <h2 id="client-modal-title">Novo Cliente</h2>
+<div class="modal-overlay" id="appointment-modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Novo Agendamento</h2>
             <button class="close-modal-btn">&times;</button>
         </div>
         <div class="modal-body">
-            
-            <form id="client-form" class="client-form-grid">
-                <h3 class="form-section-title">Dados do Tutor</h3>
-                <div class="form-group span-2">
-                    <label for="client-name">Nome Completo *</label>
-                    <input type="text" id="client-name" required>
+            <form class="appointment-form" id="appointment-form-content"> 
+                <div class="form-group">
+                    <label for="app-client">Cliente</label>
+                    <select id="app-client" required>
+                        <option value="">Selecione um cliente...</option>
+                        <?php foreach ($clientes as $cliente): ?>
+                            <option value="<?php echo $cliente['id']; ?>">
+                                <?php echo htmlspecialchars($cliente['nome_completo']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="client-phone">Telefone *</label>
-                    <input type="tel" id="client-phone" required>
-                </div>
-                 <div class="form-group">
-                    <label for="client-email">Email</label>
-                    <input type="email" id="client-email">
-                </div>
-                
-                <h3 class="form-section-title span-4">Endereço</h3>
-                <div class="form-group">
-                    <label for="client-cep">CEP</label>
-                    <input type="text" id="client-cep">
-                </div>
-                <div class="form-group span-2">
-                    <label for="client-street">Logradouro (Rua/Av)</label>
-                    <input type="text" id="client-street">
-                </div>
-                 <div class="form-group">
-                    <label for="client-number">Número</label>
-                    <input type="text" id="client-number">
+                    <label for="app-pet">Pet</label>
+                    <select id="app-pet" disabled required>
+                        <option value="">Selecione um cliente primeiro</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="client-neighborhood">Bairro</label>
-                    <input type="text" id="client-neighborhood">
+                    <label for="app-service">Serviço</label>
+                    <select id="app-service" required>
+                        <option value="">Selecione um serviço...</option>
+                        <option value="Banho">Banho</option>
+                        <option value="Banho e Tosa">Banho e Tosa</option>
+                        <option value="Tosa Higiênica">Tosa Higiênica</option>
+                        <option value="Consulta Veterinária">Consulta Veterinária</option>
+                        <option value="Vacina">Vacina</option>
+                    </select>
+                </div>
+                    <div class="form-group-row">
+                    <div class="form-group">
+                        <label for="app-date">Data</label>
+                        <input type="date" id="app-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="app-time">Horário</label>
+                        <input type="time" id="app-time" step="900" min="08:00" max="18:00" required>
+                    </div>
+                </div>
+                    <div class="form-group">
+                    <label for="app-professional">Profissional</label>
+                    <select id="app-professional">
+                        <option value="Qualquer um">Qualquer um</option>
+                        <option value="Maria (Tosadora)">Maria (Tosadora)</option>
+                        <option value="Dr. Roberto (Veterinário)">Dr. Roberto (Veterinário)</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="client-city">Cidade</label>
-                    <input type="text" id="client-city">
-                </div>
-                 <div class="form-group">
-                    <label for="client-state">Estado (UF)</label>
-                    <input type="text" id="client-state" maxlength="2">
+                    <label for="app-notes">Observações</label>
+                    <textarea id="app-notes" rows="3" placeholder="Ex: Pet alérgico a shampoo comum"></textarea>
                 </div>
             </form>
-
-            <hr class="form-divider">
-
-            <div class="pet-section">
-                <h3 class="form-section-title">Pets</h3>
-                <form id="pet-form" class="pet-form-grid">
-                    <div class="form-group">
-                        <label for="pet-name">Nome do Pet *</label>
-                        <input type="text" id="pet-name">
-                    </div>
-                    <div class="form-group">
-                        <label for="pet-species">Espécie</label>
-                        <select id="pet-species">
-                            <option value="">Selecione...</option>
-                            <option value="Cão">Cão</option>
-                            <option value="Gato">Gato</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="pet-breed">Raça</label>
-                        <select id="pet-breed" disabled>
-                            <option value="">Selecione a espécie</option>
-                        </select>
-                    </div>
-                     <div class="form-group">
-                        <label for="pet-birthdate">Nascimento</label>
-                        <input type="date" id="pet-birthdate">
-                    </div>
-                    <button type="submit" class="btn btn-secondary btn-add-pet">Adicionar Pet</button>
-                </form>
-
-                <ul class="pet-list-container" id="pet-list">
-                    </ul>
-            </div>
-
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary cancel-btn">Cancelar</button>
-            <button class="btn btn-primary" id="saveClientBtn">Salvar Cliente</button>
+            <button class="btn btn-secondary" id="cancel-app-btn">Cancelar</button>
+            <button class="btn btn-primary" id="save-app-btn">Salvar Agendamento</button>
         </div>
     </div>
 </div>
 
 <?php 
-// Inclui o final do HTML (onde o main.js é chamado)
+// Inclui o final do HTML
 include 'includes/_footer.php'; 
 ?>

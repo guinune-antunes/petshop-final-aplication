@@ -1,7 +1,45 @@
-/* Importando uma fonte limpa do Google Fonts */
+/* ========================================
+   1. IMPORTAÇÃO E VARIÁVEIS GLOBAIS
+   ======================================== */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Reset básico e configurações globais */
+:root {
+    /* Cores Principais */
+    --color-primary: #1abc9c;
+    --color-primary-dark: #16a085;
+    --color-dark: #2c3e50;
+    --color-secondary: #34495e;
+
+    /* Cores Semânticas */
+    --color-info: #3498db;
+    --color-success: #2ecc71;
+    --color-warning: #f1c40f;
+    --color-danger: #e74c3c;
+    --color-purple: #9b59b6;
+
+    /* Cores de Fundo */
+    --bg-main: #f4f7fa;
+    --bg-widget: #ffffff;
+    --bg-sidebar: #2c3e50;
+    --bg-hover: #34495e;
+    --bg-disabled: #f4f4f4;
+
+    /* Cores de Texto */
+    --text-light: #ecf0f1;
+    --text-dark: #333;
+    --text-muted: #777;
+
+    /* Cores de Borda */
+    --border-color: #e0e0e0;
+    --border-color-light: #f0f0f0;
+
+    /* Layout */
+    --sidebar-width: 260px;
+}
+
+/* ========================================
+   2. RESET BÁSICO E ESTILOS GLOBAIS
+   ======================================== */
 * {
     margin: 0;
     padding: 0;
@@ -10,78 +48,37 @@
 
 body {
     font-family: 'Poppins', sans-serif;
-    background-color: #f4f7fa;
-    color: #333;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
     -webkit-font-smoothing: antialiased;
 }
 
-/* --- ESTRUTURA PRINCIPAL --- */
-.dashboard-container {
-    display: flex;
+.main-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
 }
 
+/* ========================================
+   3. LAYOUT PRINCIPAL (ESTRUTURA)
+   ======================================== */
+
+.dashboard-container {
+    display: flex;
+    position: relative;
+}
+
+/* --- A: Sidebar (Menu Esquerdo) --- */
 .sidebar {
-    width: 260px;
-    background-color: #2c3e50;
-    color: #ecf0f1;
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    color: var(--text-light);
     display: flex;
     flex-direction: column;
     height: 100vh;
-    position: fixed;
-}
-
-/* O container que envolve tudo */
-.dashboard-container {
-    display: flex;
-    position: relative; /* Cria um contexto de posicionamento */
-}
-
-/* A sidebar FIXA */
-.sidebar {
-    width: 260px;
-    position: fixed; /* Fixa na tela */
+    position: fixed; /* Fixo na tela */
     top: 0;
     left: 0;
-    height: 100vh;
-    z-index: 1000; /* Define uma camada alta, garantindo que fique POR CIMA de tudo */
-    /* ... (outros estilos da sidebar como background-color, etc.) ... */
-}
-
-/* O container de toda a área à direita da sidebar */
-.main-area {
-    position: relative; /* Define que ele respeitará o fluxo do documento */
-    margin-left: 260px; /* A regra mais importante para empurrá-lo para a direita */
-    width: calc(100% - 260px); 
-    display: flex;
-    flex-direction: column;
-}
-
-/* O wrapper do conteúdo dentro da main-area */
-.content-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-/* O Header que fica dentro do content-wrapper */
-.header {
-    /* ... (estilos normais do header) ... */
-    position: sticky; /* Faz o header rolar junto até o topo e depois fixar */
-    top: 0;
-    z-index: 999; /* Uma camada um pouco abaixo da sidebar, mas acima do conteúdo */
-    background-color: var(--bg-secondary); /* Necessário para o sticky funcionar bem */
-}
-
-/* O conteúdo principal da página */
-.main-content {
-    padding: 30px;
-    flex-grow: 1;
-}
-
-/* Layout específico para a página de clientes */
-.content-wrapper-split {
-    width: 100%;
+    z-index: 1000;
 }
 
 .sidebar-header .fa-paw {
@@ -96,7 +93,7 @@ body {
 }
 
 .nav-item {
-    color: #ecf0f1;
+    color: var(--text-light);
     text-decoration: none;
     padding: 15px 25px;
     display: block;
@@ -110,28 +107,52 @@ body {
 }
 
 .nav-item:hover {
-    background-color: #34495e;
+    background-color: var(--bg-hover);
 }
 
 .nav-item.active {
-    background-color: #1abc9c;
+    background-color: var(--color-primary);
     font-weight: 500;
 }
 
-/* --- HEADER --- */
+/* --- B: Área Principal (Conteúdo) --- */
+.main-area {
+    position: relative;
+    margin-left: var(--sidebar-width); /* Empurra o conteúdo para a direita */
+    width: calc(100% - var(--sidebar-width));
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.main-content {
+    padding: 30px;
+    flex-grow: 1;
+}
+
+/* --- C: Header (Topo) --- */
 .header {
-    background-color: #ffffff;
+    background-color: var(--bg-widget);
     padding: 15px 30px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky; /* Fixa no topo ao rolar */
+    top: 0;
+    z-index: 999;
 }
 
 .header-search {
     display: flex;
     align-items: center;
-    background-color: #f4f7fa;
+    background-color: var(--bg-main);
     padding: 8px 15px;
     border-radius: 20px;
 }
@@ -166,7 +187,7 @@ body {
 
 .user-info small {
     display: block;
-    color: #777;
+    color: var(--text-muted);
 }
 
 .user-photo {
@@ -175,190 +196,12 @@ body {
     border-radius: 50%;
 }
 
-/* --- MAIN CONTENT --- */
-.main-content {
-    padding: 30px;
-    flex-grow: 1;
-}
 
-.main-title {
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-}
+/* ========================================
+   4. COMPONENTES REUTILIZÁVEIS
+   ======================================== */
 
-/* --- WIDGETS DASHBOARD --- */
-.widget-card {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.kpi-widgets {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-}
-
-.kpi-card {
-    display: flex;
-    align-items: center;
-}
-
-.kpi-card .card-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: #fff;
-    margin-right: 20px;
-}
-.card-icon.blue { background-color: #3498db; }
-.card-icon.green { background-color: #2ecc71; }
-.card-icon.orange { background-color: #e67e22; }
-.card-icon.purple { background-color: #9b59b6; }
-.kpi-card .card-content .card-value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    display: block;
-}
-.kpi-card .card-content .card-label { color: #777; }
-.content-widgets {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-}
-.card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-.appointment-list { list-style: none; }
-.appointment-list li {
-    display: grid;
-    grid-template-columns: 80px 1fr 1fr 1fr 100px;
-    align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-.appointment-list li:last-child { border-bottom: none; }
-.appointment-list .time { font-weight: 600; }
-.appointment-list .pet-name { font-weight: 500; }
-.appointment-list .status {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    border-radius: 12px;
-    text-align: center;
-    color: #fff;
-}
-.status.scheduled { background-color: #3498db; }
-.status.confirmed { background-color: #2ecc71; }
-.status.waiting { background-color: #f1c40f; color: #333; }
-
-/* WIDGET: PRÉ-CALENDÁRIO SEMANAL */
-.week-calendar {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-.day-card {
-    flex: 1;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-.day-card.current-day {
-    border-color: #1abc9c;
-    background-color: #f0fcf9;
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-}
-.day-card .day-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #777;
-}
-.day-card .day-number {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 5px 0;
-}
-.day-card .intensity {
-    height: 6px;
-    border-radius: 3px;
-    width: 80%;
-    margin: 0 auto;
-}
-.intensity.intensity-low { background-color: #2ecc71; }
-.intensity.intensity-medium { background-color: #f1c40f; }
-.intensity.intensity-high { background-color: #e74c3c; }
-
-/* WIDGET: NOTIFICAÇÕES */
-.notification-list {
-    list-style: none;
-    max-height: 350px;
-    overflow-y: auto;
-}
-.notification-item {
-    display: flex;
-    gap: 15px;
-    padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-.notification-item:last-child { border-bottom: none; }
-.notification-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    min-width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-.notification-content p {
-    margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-.notification-content small { color: #888; }
-.notification-item.info .notification-icon {
-    background-color: #eaf5ff;
-    color: #3498db;
-}
-.notification-item.warning .notification-icon {
-    background-color: #fff8e6;
-    color: #e67e22;
-}
-.notification-item.error .notification-icon {
-    background-color: #ffeded;
-    color: #e74c3c;
-}
-
-/* --- PÁGINA DE AGENDA --- */
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.page-header .main-title {
-    margin: 0;
-}
-
-.calendar-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
+/* --- A: Botões --- */
 .btn {
     padding: 8px 16px;
     border: none;
@@ -370,23 +213,23 @@ body {
 }
 
 .btn-primary {
-    background-color: #1abc9c;
+    background-color: var(--color-primary);
     color: #fff;
 }
 .btn-primary:hover {
-    background-color: #16a085;
+    background-color: var(--color-primary-dark);
 }
 
 .btn-secondary {
     background-color: #ecf0f1;
-    color: #34495e;
+    color: var(--color-secondary);
     border: 1px solid #bdc3c7;
 }
 .btn-secondary:hover {
     background-color: #dce4e6;
 }
 .btn-secondary.active {
-    background-color: #34495e;
+    background-color: var(--color-secondary);
     color: #fff;
 }
 
@@ -395,95 +238,324 @@ body {
     border: 1px solid #bdc3c7;
     padding: 8px 12px;
 }
+.btn-icon.btn-edit { color: var(--color-info); }
+.btn-icon.btn-delete { color: var(--color-danger); }
+.btn-icon:hover { opacity: 0.7; }
 
+/* --- B: Cabeçalho de Página (Título + Controles) --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-header .main-title {
+    margin: 0;
+}
+
+.page-controls, .calendar-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-container .fa-search {
+    position: absolute;
+    left: 12px;
+    color: #aaa;
+    font-size: 0.9em;
+}
+
+.search-container input[type="text"] {
+    padding-left: 35px;
+    min-width: 220px;
+    /* (Estilos de formulário estão abaixo) */
+}
+
+/* --- C: Modais --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1010; /* Acima da sidebar */
+}
+
+.modal-content {
+    background-color: var(--bg-widget);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.modal-content.modal-lg {
+    max-width: 800px;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h2 { font-size: 1.2rem; }
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* --- D: Formulários (Dentro dos Modais) --- */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+.form-group-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: 'Poppins', sans-serif;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+.form-group select[disabled] {
+    background-color: var(--bg-disabled);
+}
+
+/* --- E: Tabelas de Dados --- */
+.table-container {
+    background-color: var(--bg-widget);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+    overflow-x: auto; /* Garante rolagem em telas pequenas */
+}
+
+.data-table { /* Nome genérico para todas as tabelas */
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table thead th {
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.data-table tbody td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.action-buttons { 
+    display: flex; 
+    gap: 10px; 
+}
+
+/* --- F: Widgets (Cards do Dashboard) --- */
+.widget-card {
+    background-color: var(--bg-widget);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+
+/* ========================================
+   5. ESTILOS ESPECÍFICOS POR PÁGINA
+   ======================================== */
+
+/* --- PÁGINA: DASHBOARD --- */
+.kpi-widgets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.kpi-card {
+    display: flex;
+    align-items: center;
+}
+.kpi-card .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #fff;
+    margin-right: 20px;
+}
+.kpi-card .card-icon.blue { background-color: var(--color-info); }
+.kpi-card .card-icon.green { background-color: var(--color-success); }
+.kpi-card .card-icon.orange { background-color: var(--color-warning); }
+.kpi-card .card-icon.purple { background-color: var(--color-purple); }
+
+.kpi-card .card-content .card-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: block;
+}
+.kpi-card .card-content .card-label { color: var(--text-muted); }
+
+.content-widgets {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+.appointment-list { list-style: none; }
+.appointment-list li {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 1fr 100px;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color-light);
+}
+.appointment-list li:last-child { border-bottom: none; }
+.appointment-list .time { font-weight: 600; }
+.appointment-list .pet-name { font-weight: 500; }
+.appointment-list .status {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-align: center;
+    color: #fff;
+}
+.status.scheduled { background-color: var(--color-info); }
+.status.confirmed { background-color: var(--color-success); }
+.status.waiting { background-color: var(--color-warning); color: #333; }
+
+.week-calendar {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.day-card {
+    flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.day-card.current-day {
+    border-color: var(--color-primary);
+    background-color: #f0fcf9;
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+.day-card .day-name { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+.day-card .day-number { font-size: 1.5rem; font-weight: 600; margin: 5px 0; }
+.day-card .intensity { height: 6px; border-radius: 3px; width: 80%; margin: 0 auto; }
+.intensity.intensity-low { background-color: var(--color-success); }
+.intensity.intensity-medium { background-color: var(--color-warning); }
+.intensity.intensity-high { background-color: var(--color-danger); }
+
+.notification-list { list-style: none; max-height: 350px; overflow-y: auto; }
+.notification-item { display: flex; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--border-color-light); }
+.notification-item:last-child { border-bottom: none; }
+.notification-icon { display: flex; align-items: center; justify-content: center; font-size: 1.2rem; min-width: 40px; height: 40px; border-radius: 50%; }
+.notification-content p { margin: 0; font-size: 0.9rem; line-height: 1.4; }
+.notification-content small { color: #888; }
+.notification-item.info .notification-icon { background-color: #eaf5ff; color: var(--color-info); }
+.notification-item.warning .notification-icon { background-color: #fff8e6; color: var(--color-warning); }
+.notification-item.error .notification-icon { background-color: #ffeded; color: var(--color-danger); }
+
+
+/* --- PÁGINA: AGENDA --- */
 .current-date-range {
     font-weight: 500;
-    color: #2c3e50;
-}
-
-/* Grid do Calendário */
-
-.appointment-card {
-    position: absolute;
-    color: #ffffff; /* Texto branco fica bom na maioria dos fundos */
-    padding: 4px 8px; /* Garante um espaçamento interno */
-    overflow: hidden; /* **A CORREÇÃO DO BUG**: Esconde o que vazar */
-    box-sizing: border-box; /* Garante que o padding não estoure a altura */
-    font-size: 0.9em; /* Um pouco menor para caber mais */
-    border-radius: 4px;
-    /* Uma sombra suave para destacar */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-/* Estilos para o texto dentro do card */
-.appointment-card p,
-.appointment-card small {
-    margin: 0;
-    line-height: 1.3;
-    white-space: nowrap; /* **A CORREÇÃO DO BUG**: Não quebra a linha */
-    overflow: hidden; /* Esconde o que vazar */
-    text-overflow: ellipsis; /* **A CORREÇÃO DO BUG**: Adiciona "..." */
-}
-
-.appointment-card p.pet-name {
-    font-weight: bold;
-}
-
-.appointment-card small {
-    font-size: 0.85em;
-    opacity: 0.9;
-}
-
-
-/* --- AS NOVAS CLASSES DE CORES --- */
-
-/* Cor Padrão (para serviços não mapeados) */
-.service-default {
-    background-color: #6c757d; /* Cinza */
-    border-left: 3px solid #545b62;
-}
-
-/* Banho */
-.service-banho {
-    background-color: #007bff; /* Azul */
-    border-left: 3px solid #0056b3;
-}
-
-/* Banho e Tosa */
-.service-banho-e-tosa {
-    background-color: #28a745; /* Verde */
-    border-left: 3px solid #1e7e34;
-}
-
-/* Tosa Higiênica */
-.service-tosa-higiênica {
-    background-color: #17a2b8; /* Ciano */
-    border-left: 3px solid #117a8b;
-}
-
-/* Consulta Veterinária */
-.service-consulta-veterinária {
-    background-color: #dc3545; /* Vermelho */
-    border-left: 3px solid #b21f2d;
-}
-
-/* Vacina */
-.service-vacina {
-    background-color: #ffc107; /* Amarelo */
-    border-left: 3px solid #d39e00;
-    color: #212529; /* Texto escuro para o amarelo */
+    color: var(--color-dark);
 }
 
 .calendar-grid-container {
     display: flex;
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
+    background-color: var(--bg-widget);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     height: 70vh; /* Altura fixa para o container */
 }
 
 .time-column {
     padding-top: 40px; /* Alinhar com o cabeçalho dos dias */
+    width: 60px;
 }
 
 .time-slot {
@@ -491,17 +563,16 @@ body {
     text-align: right;
     padding-right: 10px;
     font-size: 0.8rem;
-    color: #777;
+    color: var(--text-muted);
     position: relative;
-    width: 60px;
 }
 .time-slot::after {
     content: '';
     position: absolute;
     bottom: 0;
     right: 0;
-    width: calc(100vw - 260px - 60px); /* Largura total da viewport menos sidebar e a própria coluna de tempo */
-    border-bottom: 1px solid #f0f0f0;
+    width: calc(100vw - var(--sidebar-width) - 60px); /* Largura total menos sidebar e a coluna de tempo */
+    border-bottom: 1px solid var(--border-color-light);
 }
 
 .calendar-grid {
@@ -511,7 +582,7 @@ body {
 }
 
 .day-column {
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid var(--border-color);
     position: relative;
 }
 
@@ -525,11 +596,12 @@ body {
     padding: 10px 0;
     position: sticky;
     top: 0;
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
+    background: var(--bg-widget);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 10;
 }
 .day-header.current {
-    color: #1abc9c;
+    color: var(--color-primary);
     font-weight: 600;
 }
 
@@ -538,223 +610,130 @@ body {
     height: 100%;
     width: 100%;
 }
-.appointment-card.status-remarcado {
-    background-color: #f8f9fa; /* Fundo cinza claro */
-    border-left: 3px solid #6c757d;
-    color: #6c757d; /* Texto cinza */
-    opacity: 0.7; /* Deixa transparente */
-}
+
 .appointment-card {
     position: absolute;
-    left: 5px;
-    right: 5px;
-    border-radius: 4px;
-    padding: 8px;
-    color: #fff;
-    font-size: 0.8rem;
+    color: #ffffff;
+    padding: 4px 8px;
     overflow: hidden;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    left: 5px; /* Adicionado para descolar da borda */
+    right: 5px; /* Adicionado para descolar da borda */
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: none; /* Removido 'border' para usar 'border-left' das cores */
+    text-align: left; /* Garante que o texto do botão fique à esquerda */
 }
-.appointment-card .pet-name { font-weight: 600; }
-.appointment-card .service-name { margin: 2px 0; }
-.appointment-card small { opacity: 0.8; }
+
+.appointment-card p,
+.appointment-card small {
+    margin: 0;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.appointment-card p.pet-name { font-weight: bold; }
+.appointment-card small { font-size: 0.85em; opacity: 0.9; }
+
+/* Cores de Serviço (única definição) */
+.service-default { background-color: #6c757d; border-left: 3px solid #545b62; }
+.service-banho { background-color: #007bff; border-left: 3px solid #0056b3; }
+.service-banho-e-tosa { background-color: #28a745; border-left: 3px solid #1e7e34; }
+.service-tosa-higiênica { background-color: #17a2b8; border-left: 3px solid #117a8b; }
+.service-consulta-veterinária { background-color: #dc3545; border-left: 3px solid #b21f2d; }
+.service-vacina { background-color: #ffc107; border-left: 3px solid #d39e00; color: #212529; }
+
+/* Status Remarcado */
+.appointment-card.status-remarcado {
+    background-color: #f8f9fa;
+    border-left: 3px solid #6c757d;
+    color: #6c757d;
+    opacity: 0.7;
+}
 .appointment-card.status-remarcado p,
 .appointment-card.status-remarcado small {
     color: #6c757d;
 }
-/* Cores por serviço */
-.service-bath { background-color: #3498db; }
-.service-grooming { background-color: #9b59b6; }
-.service-vet { background-color: #e74c3c; }
 
 
-/* --- MODAL --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+/* --- PÁGINA: CLIENTES --- */
+.modal-lg .modal-body { 
+    display: flex; 
+    gap: 25px; 
+    flex-wrap: wrap; 
+}
+.client-form-grid {
+    flex: 1; 
+    min-width: 300px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+.client-form-grid .form-group,
+.client-form-grid .form-section-title {
+    grid-column: span 4;
+}
+.client-form-grid .span-2 {
+    grid-column: span 2;
+}
+@media (max-width: 600px) {
+    .client-form-grid .span-2 {
+        grid-column: span 4;
+    }
 }
 
-.modal-content {
-    background-color: #fff;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+.pet-section { 
+    flex: 1.2; 
+    min-width: 350px; 
+    border-top: 1px dashed var(--border-color); 
+    margin-top: 15px; 
+    padding-top: 15px;
+}
+@media (min-width: 768px) {
+    .pet-section { 
+        border-top: none; 
+        margin-top: 0; 
+        padding-top: 0; 
+        border-left: 1px dashed var(--border-color); 
+        padding-left: 25px; 
+    }
 }
 
-.modal-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.pet-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    align-items: end;
 }
-.modal-header h2 { font-size: 1.2rem; }
-
-.close-modal-btn {
-    background: none;
-    border: none;
-    font-size: 1.8rem;
-    cursor: pointer;
-    color: #777;
-}
-
-.modal-body {
-    padding: 20px;
-}
-
-.appointment-form .form-group {
-    margin-bottom: 15px;
-}
-
-.appointment-form .form-group-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-}
-.form-group-row .form-group {
-    flex: 1;
+.pet-form-grid .form-group {
     margin-bottom: 0;
 }
-
-.appointment-form label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    font-size: 0.9rem;
+.pet-form-grid .btn-add-pet {
+    grid-column: span 2;
 }
 
-.appointment-form input,
-.appointment-form select,
-.appointment-form textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    font-family: 'Poppins', sans-serif;
-}
-.appointment-form input:focus,
-.appointment-form select:focus,
-.appointment-form textarea:focus {
-    outline: none;
-    border-color: #1abc9c;
-}
-.appointment-form select[disabled] {
-    background-color: #f4f4f4;
-}
+.client-form-grid .span-1 { grid-column: span 1; }
+.client-form-grid .span-2 { grid-column: span 2; }
+.client-form-grid .span-3 { grid-column: span 3; }
+.client-form-grid .span-4 { grid-column: span 4; }
 
-.modal-footer {
-    padding: 15px 20px;
-    border-top: 1px solid #e0e0e0;
-    text-align: right;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-.page-actions {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.search-box {
-    display: flex;
-    align-items: center;
-    background-color: var(--bg-secondary);
-    padding: 8px 15px;
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-}
-.search-box input {
-    border: none;
-    background: transparent;
-    outline: none;
-    margin-left: 10px;
-    font-size: 0.9rem;
-    color: var(--text-primary);
-}
-
-.table-container {
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border: 1px solid var(--border-color);
-}
-
-.client-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.client-table thead th {
-    text-align: left;
-    padding: 12px 15px;
-    border-bottom: 2px solid var(--border-color);
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-}
-
-.client-table tbody td {
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.9rem;
-    color: var(--text-primary);
-}
-
-.client-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.client-table tbody tr:hover {
-    background-color: rgba(0,0,0,0.02);
-}
-.dark-mode .client-table tbody tr:hover {
-    background-color: rgba(255,255,255,0.04);
-}
-
-
-.action-buttons { display: flex; gap: 10px; }
-.btn-icon.btn-edit { color: #3498db; }
-.btn-icon.btn-delete { color: #e74c3c; }
-.btn-icon:hover { opacity: 0.7; }
-
-/* Estilos para o Modal de Cliente */
-.modal-lg { max-width: 800px; }
-.modal-body { display: flex; gap: 25px; flex-wrap: wrap; }
-.client-form-section { flex: 1; min-width: 300px; }
-.pet-management-section { flex: 1.2; min-width: 350px; border-top: 1px dashed var(--border-color); margin-top: 15px; padding-top: 15px;}
-@media (min-width: 768px) {
-    .pet-management-section { border-top: none; margin-top: 0; padding-top: 0; border-left: 1px dashed var(--border-color); padding-left: 25px; }
-}
-
-.client-form-section h4, .pet-management-section h4 { color: var(--text-primary); margin-bottom: 15px; }
-.pet-management-section h5 { color: var(--text-secondary); margin-bottom: 15px; }
 
 .pet-list-container {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-main);
     border-radius: 4px;
     min-height: 80px;
     max-height: 150px;
     overflow-y: auto;
     padding: 10px;
-    margin-bottom: 15px;
+    margin-top: 15px;
     border: 1px solid var(--border-color);
 }
 .pet-list { list-style: none; }
 .pet-list-item {
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-widget);
     padding: 8px 12px;
     border-radius: 4px;
     margin-bottom: 8px;
@@ -764,6 +743,71 @@ body {
     border: 1px solid var(--border-color);
     font-size: 0.9rem;
 }
-.pet-list-item-info strong { margin-right: 10px; color: var(--text-primary); }
-.pet-list-item-info small { color: var(--text-secondary); }
-.remove-pet-btn { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 1rem; }
+.pet-list-item-info strong { margin-right: 10px; color: var(--text-dark); }
+.pet-list-item-info small { color: var(--text-muted); }
+.remove-pet-btn { background: none; border: none; color: var(--color-danger); cursor: pointer; font-size: 1rem; }
+
+
+/* ========================================
+   6. RESPONSIVIDADE (MEDIA QUERIES)
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Esconde a sidebar e ajusta a área principal */
+    .sidebar {
+        left: -100%; /* Esconde a sidebar fora da tela */
+    }
+    .main-area {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    /* Ajusta o header para telas menores */
+    .header {
+        flex-wrap: wrap;
+        padding: 15px;
+    }
+    .header-search {
+        order: 3; /* Joga a busca para baixo */
+        width: 100%;
+        margin-top: 10px;
+    }
+    .header-search input {
+        width: 100%;
+    }
+
+    /* Ajusta o cabeçalho das páginas */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .page-controls, .calendar-controls {
+        width: 100%;
+    }
+    .page-controls .search-container,
+    .page-controls .btn {
+        width: 100%;
+    }
+
+    /* Ajusta o grid do dashboard */
+    .content-widgets {
+        grid-template-columns: 1fr;
+    }
+
+    /* Ajusta o layout do modal de cliente */
+    .pet-section {
+        border-left: none;
+        padding-left: 0;
+    }
+    .pet-form-grid {
+        grid-template-columns: 1fr;
+    }
+    .pet-form-grid .btn-add-pet {
+        grid-column: span 1;
+    }
+
+    .client-form-grid .form-group {
+        grid-column: span 4 !important;
+    }
+
+}
