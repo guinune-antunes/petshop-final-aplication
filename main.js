@@ -108,8 +108,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // --- Evento DINÂMICO: Buscar Pets (Sem mudanças) ---
         clientSelect.addEventListener('change', function() {
-            // ... (seu código existente de buscar pets)...
-            // (Este código continua funcionando perfeitamente)
             const clienteId = this.value;
             petSelect.innerHTML = '<option value="">Carregando...</option>';
             petSelect.disabled = true;
@@ -240,8 +238,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     quantidade: document.getElementById('product-quantidade').value,
                     unidade: document.getElementById('product-unidade').value,
                     data_chegada: document.getElementById('product-chegada').value,
-                    data_vencimento: document.getElementById('product-vencimento').value
-                    descricao: document.getElementById('product-descricao').value.trim(), // <-- ADICIONE ESTA LINHA
+                    data_vencimento: document.getElementById('product-vencimento').value,
+                    
+                    // ===== CORREÇÃO AQUI (VÍRGULA ADICIONADA NA LINHA ANTERIOR) =====
+                    descricao: document.getElementById('product-descricao').value.trim(),
                 };
 
                 // Validação
@@ -303,9 +303,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             document.getElementById('product-nome').value = p.nome;
                             document.getElementById('product-marca').value = p.marca;
                             
-                            // ===== LINHA ADICIONADA =====
+                            // ===== LINHA JÁ CORRIGIDA ANTERIORMENTE =====
                             document.getElementById('product-descricao').value = p.descricao || '';
-                            // ============================
+                            // ===========================================
                             
                             document.getElementById('product-quantidade').value = p.quantidade;
                             document.getElementById('product-unidade').value = p.unidade;
@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // --- Ação Principal: Salvar Cliente e Pets (CRIAR ou EDITAR) ---
             saveClientBtn.addEventListener('click', function() {
-const clienteData = {
+                const clienteData = {
                     id: editingClientId,
                     // Corrigido para 'nome_completo'
                     nome_completo: document.getElementById('client-name').value.trim(),
