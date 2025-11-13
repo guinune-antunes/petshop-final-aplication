@@ -199,6 +199,151 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } // Fim do if (estamos na página da agenda)
 
+    // ===================================================
+    // --- LÓGICA DA PÁGINA DE ESTOQUE (PRODUTOS) ---
+    // ===================================================
+    const addProductBtn = document.getElementById('add-product-btn');
+    if (addProductBtn) { // Este IF garante que o código abaixo só rode na página de estoque
+
+        const productModal = document.getElementById('product-modal');
+        const productTableBody = document.getElementById('productTableBody');
+        const productSearchInput = document.getElementById('productSearchInput');
+        
+        if (productModal && productTableBody) {
+            
+            const productForm = document.getElementById('product-form');
+            const saveProductBtn = document.getElementById('saveProductBtn');
+            const modalTitle = document.getElementById('product-modal-title');
+            let editingProductId = null;
+
+            // --- Abrir/Fechar Modal ---
+            const openModal = () => {
+                editingProductId = null;
+                modalTitle.textContent = 'Novo Produto';
+                productForm.reset();
+                productModal.style.display = 'flex';
+            };
+            const closeModal = () => {
+                productModal.style.display = 'none';
+            };
+
+            addProductBtn.addEventListener('click', openModal);
+            productModal.querySelector('.close-modal-btn').addEventListener('click', closeModal);
+            productModal.querySelector('.cancel-btn').addEventListener('click', closeModal);
+
+            // --- Salvar (Novo ou Edição) ---
+            saveProductBtn.addEventListener('click', function() {
+                const produtoData = {
+                    id: editingProductId,
+                    nome: document.getElementById('product-nome').value.trim(),
+                    marca: document.getElementById('product-marca').value.trim(),
+                    quantidade: document.getElementById('product-quantidade').value,
+                    unidade: document.getElementById('product-unidade').value,
+                    data_chegada: document.getElementById('product-chegada').value,
+                    data_vencimento: document.getElementById('product-vencimento').value
+                    descricao: document.getElementById('product-descricao').value.trim(), // <-- ADICIONE ESTA LINHA
+                };
+
+                // Validação
+                if (!produtoData.nome || !produtoData.quantidade || !produtoData.unidade || !produtoData.data_chegada) {
+                    alert('Por favor, preencha os campos obrigatórios (*).');
+                    return;
+                }
+
+                fetch('salvar_produto.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(produtoData)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    alert(result.message);
+                    if (result.success) {
+                        location.reload(); // Recarrega a página
+                    }
+                }).catch(err => {
+                    console.error('Fetch error:', err);
+                    alert('Erro de comunicação.');
+                });
+            });
+            
+            // --- Delegação de Eventos (Editar e Excluir) ---
+            productTableBody.addEventListener('click', function(event) {
+                const targetButton = event.target.closest('button');
+                if (!targetButton) return;
+
+                const productId = targetButton.dataset.id;
+
+                // --- Ação de EXCLUIR ---
+                if (targetButton.classList.contains('btn-delete')) {
+                    if (confirm(`Tem certeza que deseja excluir o produto ID ${productId}?`)) {
+                        fetch(`excluir_produto.php?id=${productId}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            alert(result.message);
+                            if (result.success) {
+                                location.reload();
+                            }
+                        })
+                        .catch(error => { console.error('Erro ao excluir:', error); alert('Erro de comunicação.'); });
+                    }
+                }
+
+                // --- Ação de EDITAR (Carregar dados) ---
+                if (targetButton.classList.contains('btn-edit')) {
+                    fetch(`buscar_produto.php?id=${productId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.produto) {
+                            const p = data.produto;
+                            
+                            // Preenche o formulário
+                            editingProductId = p.id;
+                            modalTitle.textContent = 'Editando Produto';
+                            document.getElementById('product-nome').value = p.nome;
+                            document.getElementById('product-marca').value = p.marca;
+                            
+                            // ===== LINHA ADICIONADA =====
+                            document.getElementById('product-descricao').value = p.descricao || '';
+                            // ============================
+                            
+                            document.getElementById('product-quantidade').value = p.quantidade;
+                            document.getElementById('product-unidade').value = p.unidade;
+                            document.getElementById('product-chegada').value = p.data_chegada;
+                            document.getElementById('product-vencimento').value = p.data_vencimento;
+                            
+                            productModal.style.display = 'flex';
+                        } else {
+                            alert(data.message || 'Erro ao buscar dados do produto.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar produto:', error);
+                        alert('Não foi possível carregar os dados do produto.');
+                    });
+                }
+            });
+            
+            // --- Filtro de Busca Dinâmica ---
+            if (productSearchInput) {
+                const tableRows = productTableBody.getElementsByTagName('tr');
+                productSearchInput.addEventListener('input', function() {
+                    const searchTerm = productSearchInput.value.toLowerCase();
+                    for (const row of tableRows) {
+                        const rowText = row.textContent.toLowerCase();
+                        if (rowText.includes(searchTerm)) {
+                            row.style.display = "";
+                        } else {
+                            row.style.display = "none";
+                        }
+                    }
+                });
+            }
+            
+        } // Fim do if (modal e tabela existem)
+    } // Fim do if (estamos na página de estoque)
+
+
     // --- LÓGICA DO MODO ESCURO (GLOBAL) ---
     const themeToggleBtn = document.getElementById('theme-toggle');
     if (themeToggleBtn) {

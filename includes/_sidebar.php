@@ -11,7 +11,7 @@
         <a href="clientes.php" class="nav-item <?php echo ($paginaAtiva === 'clientes') ? 'active' : ''; ?>"><i class="fas fa-users"></i> Clientes</a>
         <a href="#" class="nav-item"><i class="fas fa-dog"></i> Pets</a>
         <a href="#" class="nav-item"><i class="fas fa-shopping-cart"></i> Vendas (PDV)</a>
-        <a href="#" class="nav-item"><i class="fas fa-box-open"></i> Estoque</a>
+        <a href="estoque.php" class="nav-item"><i class="fas fa-box-open"></i> Estoque</a>
         <a href="#" class="nav-item"><i class="fas fa-chart-line"></i> Relatórios</a>
         <a href="#" class="nav-item"><i class="fas fa-cog"></i> Configurações</a>
     </nav>
