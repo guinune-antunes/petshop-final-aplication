@@ -25,12 +25,13 @@ try {
     if (empty($cliente['id'])) {
         // É um NOVO CLIENTE (INSERT)
         $sql = "INSERT INTO clientes 
-                    (nome_completo, telefone, email, cep, logradouro, numero, bairro, cidade, estado) 
+                    (instituicao_id, nome_completo, telefone, email, cep, logradouro, numero, bairro, cidade, estado) 
                 VALUES 
                     (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
+            $instituicao_id,
             $cliente['nome_completo'],
             $cliente['telefone'],
             $cliente['email'],

@@ -5,12 +5,18 @@ $paginaAtiva = 'clientes';
 
 // Inclui o cabeçalho do HTML
 include 'includes/_head.php';
+require 'includes/verifica_login.php'; // Garante que está logado
 
-// --- LÓGICA DE BUSCA DE DADOS ---
+// --- LÓGICA DE BUSCA DE DADOS (FILTRADA POR INSTITUIÇÃO) ---
 require 'conexao.php'; // Usa $pdo
 
-// Pega os dados dos clientes para a tabela
-$stmt_clientes = $pdo->query("SELECT * FROM clientes ORDER BY nome_completo");
+// 1. Pega o ID da instituição da sessão do usuário
+$instituicao_id = $_SESSION['instituicao_id'];
+
+// 2. Busca APENAS os clientes desta instituição
+$sql = "SELECT * FROM clientes WHERE instituicao_id = ? ORDER BY nome_completo";
+$stmt_clientes = $pdo->prepare($sql);
+$stmt_clientes->execute([$instituicao_id]);
 $clientes = $stmt_clientes->fetchAll();
 ?>
 
@@ -65,7 +71,7 @@ $clientes = $stmt_clientes->fetchAll();
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="4">Nenhum cliente cadastrado.</td>
+                                <td colspan="4">Nenhum cliente cadastrado nesta loja.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -150,7 +156,7 @@ $clientes = $stmt_clientes->fetchAll();
                             <option value="">Selecione a espécie</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                     <div class="form-group">
                         <label for="pet-birthdate">Nascimento</label>
                         <input type="date" id="pet-birthdate" name="pet-birthdate">
                     </div>

@@ -5,7 +5,7 @@
 
     // Inclui o cabeçalho do HTML
     include 'includes/_head.php';
-    
+    require 'includes/verifica_login.php';
 ?>
 <?php include 'includes/_sidebar.php'; // Inclui a barra lateral de navegação ?>
     <div class="main-area">
