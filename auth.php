@@ -1,7 +1,14 @@
 <?php
+// 1. Segura qualquer saída acidental
+ob_start();
+
+// 2. Inicia a sessão
 session_start();
+
+// 3. Inclui a conexão
 require 'conexao.php';
 
+// --- LÓGICA DE LOGIN ---
 $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 $senha = $_POST['senha'];
 
@@ -10,30 +17,29 @@ if ($email && $senha) {
     $stmt->execute([$email]);
     $usuario = $stmt->fetch();
 
-    // Verifica se usuário existe E se a senha bate com a hash
     if ($usuario && password_verify($senha, $usuario['senha'])) {
         
-        // CRIA A SESSÃO
+        // Login Sucesso: Salva dados na sessão
         $_SESSION['usuario_id'] = $usuario['id'];
         $_SESSION['usuario_nome'] = $usuario['nome'];
         $_SESSION['usuario_cargo'] = $usuario['cargo'];
+        $_SESSION['instituicao_id'] = $usuario['instituicao_id'];
 
-        // REDIRECIONA BASEADO NO CARGO (TIER)
-        if ($usuario['cargo'] === 'admin') {
-            header("Location: dashboard.php"); // Dashboard Geral/Admin
-        } elseif ($usuario['cargo'] === 'gerente') {
-            header("Location: dashboard.php"); // Por enquanto vai pro geral
-        } elseif ($usuario['cargo'] === 'atendente') {
-            header("Location: dashboard_atendente.php"); // Dashboard Personalizada
-        }
+        // Redireciona para o Roteador
+        header("Location: dashboard.php");
         exit;
 
     } else {
+        // Senha errada
         header("Location: login.php?erro=1");
         exit;
     }
 } else {
+    // Campos vazios
     header("Location: login.php");
     exit;
 }
+
+// Limpa o buffer (segurança extra)
+ob_end_flush();
 ?>
