@@ -96,7 +96,7 @@ $instituicoes = $pdo->query($sql)->fetchAll();
                     </div>
                     <div class="form-group">
                         <label>CNPJ</label>
-                        <input type="text" id="inst-cnpj" placeholder="00.000.000/0000-00">
+                        <input type="text" id="inst-cnpj" placeholder="00.000.000/0000-00" maxlength="18">
                     </div>
                 </div>
 

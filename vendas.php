@@ -141,7 +141,7 @@ $clientes = $stmt_cli->fetchAll();
                         <div class="form-group-row" style="margin-bottom: 10px;">
                             <div class="form-group">
                                 <label>Desconto (R$)</label>
-                                <input type="number" id="desconto-valor" value="0.00" step="0.50">
+                                <input type="number" id="desconto-valor" value="0.00" step="0.01" min="0">
                             </div>
                             <div class="form-group">
                                 <label>Pagamento</label>

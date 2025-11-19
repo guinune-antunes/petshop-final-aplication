@@ -5,50 +5,52 @@ $paginaAtiva = 'agenda';
 
 // Inclui o cabeçalho do HTML
 include 'includes/_head.php';
-
-// --- LÓGICA DE BUSCA DE DADOS ---
 require 'conexao.php'; // Usa $pdo
+require 'includes/verifica_login.php'; // Garante login
+
+// --- SEGURANÇA SAAS (CRÍTICO) ---
+// Pega o ID da loja logada para filtrar tudo
+if (!isset($_SESSION['instituicao_id'])) {
+    header("Location: login.php"); exit;
+}
+$id_loja = $_SESSION['instituicao_id']; 
 
 // --- LÓGICA DE NAVEGAÇÃO DE DATAS ---
-
-// 1. Define a data base (âncora)
 if (isset($_GET['data_base']) && !empty($_GET['data_base'])) {
     $dataBase = $_GET['data_base'];
 } else {
-    $dataBase = date('Y-m-d'); // Padrão: hoje
+    $dataBase = date('Y-m-d'); 
 }
 
-// 2. Calcula os Timestamps para as âncoras
 $timestampBase = strtotime($dataBase);
-$diaDaSemanaBase = date('N', $timestampBase); // 1 (Seg) a 7 (Dom)
+$diaDaSemanaBase = date('N', $timestampBase); 
 
-// 3. Calcula o início e o fim da semana com base na data âncora
 $inicioSemana = date('Y-m-d 00:00:00', strtotime('-' . ($diaDaSemanaBase - 1) . ' days', $timestampBase));
 $fimSemana = date('Y-m-d 23:59:59', strtotime('+' . (7 - $diaDaSemanaBase) . ' days', $timestampBase));
 
-// 4. Calcula os links para os botões de navegação
 $linkSemanaAnterior = date('Y-m-d', strtotime('-7 days', $timestampBase));
 $linkSemanaSeguinte = date('Y-m-d', strtotime('+7 days', $timestampBase));
-
-// 5. Calcula o texto do display (Ex: 10 Nov - 16 Nov, 2025)
 $displayRange = date('d M', strtotime($inicioSemana)) . ' - ' . date('d M, Y', strtotime($fimSemana));
+// --- FIM DATAS ---
 
-// --- FIM DA LÓGICA DE DATAS ---
 
-
-// Pega os dados dos clientes para o modal
-$stmt_clientes = $pdo->query("SELECT id, nome_completo FROM clientes ORDER BY nome_completo");
+// 1. Pega clientes DA MINHA LOJA (Correção SaaS)
+$stmt_clientes = $pdo->prepare("SELECT id, nome_completo FROM clientes WHERE instituicao_id = ? ORDER BY nome_completo");
+$stmt_clientes->execute([$id_loja]);
 $clientes = $stmt_clientes->fetchAll();
 
-// Pega os agendamentos desta semana
+// 2. Pega agendamentos DA MINHA LOJA (Correção SaaS)
 $sql_ag = "SELECT a.*, p.nome AS pet_nome, c.nome_completo AS cliente_nome 
            FROM agendamentos a
            JOIN pets p ON a.pet_id = p.id
            JOIN clientes c ON a.cliente_id = c.id
-           WHERE a.data_hora_inicio BETWEEN ? AND ?
+           WHERE a.instituicao_id = ? 
+           AND a.data_hora_inicio BETWEEN ? AND ?
            ORDER BY a.data_hora_inicio";
+
 $stmt_ag = $pdo->prepare($sql_ag);
-$stmt_ag->execute([$inicioSemana, $fimSemana]); // Usa as datas dinâmicas
+// Passamos o ID da loja primeiro, depois as datas do filtro
+$stmt_ag->execute([$id_loja, $inicioSemana, $fimSemana]); 
 $agendamentos = $stmt_ag->fetchAll();
 
 // Separa os agendamentos por dia da semana
@@ -58,12 +60,12 @@ foreach ($agendamentos as $ag) {
     $agendamentosPorDia[$diaDaSemana][] = $ag;
 }
 
-// Funções de cálculo de layout da agenda
+// Funções de Layout
 function calcularPosicao($datetime) {
     $hora = (int)date('H', strtotime($datetime));
     $minuto = (int)date('i', strtotime($datetime));
-    $offsetInicio = 8; // A grade começa às 08:00
-    $alturaHora = 60; // Cada hora na grade tem 60px
+    $offsetInicio = 8; 
+    $alturaHora = 60; 
     $posicao = (($hora - $offsetInicio) * $alturaHora) + ($minuto);
     return max(0, $posicao);
 }
@@ -72,43 +74,29 @@ function calcularAltura($inicio, $fim) {
     $timestampInicio = strtotime($inicio);
     $timestampFim = strtotime($fim);
     $diferencaMinutos = ($timestampFim - $timestampInicio) / 60;
-    return $diferencaMinutos; // 1 minuto = 1px
+    return $diferencaMinutos; 
 }
 
-/**
- * Mapeia um agendamento para uma classe CSS de cor.
- * (CORRIGIDO: Recebe $agendamento, não $servico)
- */
 function getServiceClass($agendamento) {
-    // 1. Verifica o STATUS primeiro
     if ($agendamento['status'] == 'Remarcado') {
         return 'status-remarcado';
     }
-
-    // 2. Se não, usa a lógica de cor do SERVIÇO
-    // (CORRIGIDO: Verifica $agendamento['servico'])
     switch ($agendamento['servico']) {
-        case 'Banho':
-            return 'service-banho';
-        case 'Banho e Tosa':
-            return 'service-banho-e-tosa';
-        case 'Tosa Higiênica':
-            return 'service-tosa-higiênica';
-        case 'Consulta Veterinária':
-            return 'service-consulta-veterinária';
-        case 'Vacina':
-            return 'service-vacina';
-        default:
-            return 'service-default';
+        case 'Banho': return 'service-banho';
+        case 'Banho e Tosa': return 'service-banho-e-tosa';
+        case 'Tosa Higiênica': return 'service-tosa-higiênica';
+        case 'Consulta Veterinária': return 'service-consulta-veterinária';
+        case 'Vacina': return 'service-vacina';
+        default: return 'service-default';
     }
 }
 ?>
 
-<?php include 'includes/_sidebar.php'; // Inclui a barra lateral de navegação ?>
+<?php include 'includes/_sidebar.php'; ?>
 
 <div class="main-area">
     <div class="content-wrapper">
-        <?php include 'includes/_header.php'; // Inclui o cabeçalho superior ?>
+        <?php include 'includes/_header.php'; ?>
 
         <main class="main-content">
             <div class="page-header">
@@ -154,7 +142,7 @@ function getServiceClass($agendamento) {
                         $diaFormatado = $dias[date('w', $dataDoDiaTimestamp)] . ' ' . date('d', $dataDoDiaTimestamp);
                         
                         $isHoje = (date('Y-m-d') == $dataDoDia) ? 'current' : '';
-                        $diaDaSemana = date('N', $dataDoDiaTimestamp); // 1-7
+                        $diaDaSemana = date('N', $dataDoDiaTimestamp); 
                     ?>
                     <div class="day-column">
                         <div class="day-header <?php echo $isHoje; ?>"><?php echo $diaFormatado; ?></div>
@@ -163,11 +151,8 @@ function getServiceClass($agendamento) {
                             <?php foreach ($agendamentosPorDia[$diaDaSemana] as $ag): 
                                 $top = calcularPosicao($ag['data_hora_inicio']);
                                 $height = calcularAltura($ag['data_hora_inicio'], $ag['data_hora_fim']);
-                                
-                                // (CORRIGIDO: Passa $ag, não $ag['servico'])
                                 $classeServico = getServiceClass($ag); 
                                 
-                                // Prepara os dados para o JavaScript
                                 $data_iso = date('Y-m-d', strtotime($ag['data_hora_inicio']));
                                 $hora_iso = date('H:i', strtotime($ag['data_hora_inicio']));
                             ?>
@@ -189,10 +174,12 @@ function getServiceClass($agendamento) {
                                     <small>Tutor: <?php echo htmlspecialchars($ag['cliente_nome']); ?></small>
                                 </button>
                             <?php endforeach; ?>
-                            </div>
+
+                        </div>
                     </div>
                     <?php endfor; ?>
-                    </div>
+                    
+                </div>
             </div>
 
         </main>
@@ -266,7 +253,4 @@ function getServiceClass($agendamento) {
     </div>
 </div>
 
-<?php 
-// Inclui o final do HTML
-include 'includes/_footer.php'; 
-?>
+<?php include 'includes/_footer.php'; ?>

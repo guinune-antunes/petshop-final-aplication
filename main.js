@@ -1,17 +1,22 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("Main.js carregado com sucesso.");
 
     // ===================================================
-    // 1. LÓGICA DA AGENDA
+    // 1. LÓGICA DO MODAL DA AGENDA
     // ===================================================
     const addAppointmentBtn = document.getElementById('add-appointment-btn');
     const appointmentModal = document.getElementById('appointment-modal');
     
     if (addAppointmentBtn && appointmentModal) {
+        console.log("Agenda detectada.");
+
         const calendarGrid = document.querySelector('.calendar-grid');
         const modalTitle = appointmentModal.querySelector('.modal-header h2');
         const closeModalBtn = appointmentModal.querySelector('.close-modal-btn');
         const cancelBtn = document.getElementById('cancel-app-btn');
         const saveBtn = document.getElementById('save-app-btn');
+        
+        // Campos do Formulário
         const clientSelect = document.getElementById('app-client');
         const petSelect = document.getElementById('app-pet');
         const appointmentForm = document.getElementById('appointment-form-content');
@@ -19,128 +24,149 @@ document.addEventListener('DOMContentLoaded', function() {
         let modoModal = 'novo';
         let idAgendamentoAntigo = null;
 
+        // --- Função para ABRIR modal (NOVO) ---
         function openModalNovo() {
             modoModal = 'novo';
             idAgendamentoAntigo = null;
             modalTitle.textContent = 'Novo Agendamento';
-            appointmentForm.reset(); 
-            petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
-            petSelect.disabled = true;
+            
+            if(appointmentForm) appointmentForm.reset(); 
+            
+            if(petSelect) {
+                petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+                petSelect.disabled = true;
+            }
             appointmentModal.style.display = 'flex';
         }
 
+        // --- Função para ABRIR modal (REMARCAR) ---
         function openModalRemarcar(card) {
             modoModal = 'remarcar';
             const dados = card.dataset;
             idAgendamentoAntigo = dados.id;
             modalTitle.textContent = 'Editar / Remarcar Agendamento';
 
-            clientSelect.value = dados.clienteId;
-            document.getElementById('app-service').value = dados.servico;
-            document.getElementById('app-date').value = dados.date;
-            document.getElementById('app-time').value = dados.time;
-            document.getElementById('app-professional').value = dados.profissional;
-            document.getElementById('app-notes').value = dados.obs;
+            if(clientSelect) clientSelect.value = dados.clienteId;
             
-            petSelect.innerHTML = '<option value="">Carregando pets...</option>';
-            petSelect.disabled = true;
+            // Preenche os campos se existirem
+            if(document.getElementById('app-service')) document.getElementById('app-service').value = dados.servico;
+            if(document.getElementById('app-date')) document.getElementById('app-date').value = dados.date;
+            if(document.getElementById('app-time')) document.getElementById('app-time').value = dados.time;
+            if(document.getElementById('app-professional')) document.getElementById('app-professional').value = dados.profissional;
+            if(document.getElementById('app-notes')) document.getElementById('app-notes').value = dados.obs;
+            
+            if(petSelect) {
+                petSelect.innerHTML = '<option value="">Carregando pets...</option>';
+                petSelect.disabled = true;
 
-            fetch(`buscar_pets_cliente.php?cliente_id=${dados.clienteId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.pets.length > 0) {
-                        petSelect.innerHTML = '<option value="">Selecione um pet...</option>';
-                        data.pets.forEach(pet => {
-                            const option = document.createElement('option');
-                            option.value = pet.id;
-                            option.textContent = pet.nome;
-                            petSelect.appendChild(option);
-                        });
-                        petSelect.value = dados.petId; 
-                        petSelect.disabled = false;
-                    } else {
-                        petSelect.innerHTML = '<option value="">Cliente sem pets</option>';
-                    }
-                })
-                .catch(err => petSelect.innerHTML = '<option value="">Erro ao buscar pets</option>');
+                fetch(`buscar_pets_cliente.php?cliente_id=${dados.clienteId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.pets.length > 0) {
+                            petSelect.innerHTML = '<option value="">Selecione um pet...</option>';
+                            data.pets.forEach(pet => {
+                                const option = document.createElement('option');
+                                option.value = pet.id;
+                                option.textContent = pet.nome;
+                                petSelect.appendChild(option);
+                            });
+                            petSelect.value = dados.petId; 
+                            petSelect.disabled = false;
+                        } else {
+                            petSelect.innerHTML = '<option value="">Cliente sem pets</option>';
+                        }
+                    })
+                    .catch(err => petSelect.innerHTML = '<option value="">Erro ao buscar pets</option>');
+            }
 
             appointmentModal.style.display = 'flex';
         }
 
         function closeModal() { appointmentModal.style.display = 'none'; }
 
+        // Eventos de Abrir/Fechar
         addAppointmentBtn.addEventListener('click', openModalNovo);
-        closeModalBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
+        if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+        if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
         
+        // Clique no Card (Remarcar) - Delegação de Eventos
         if (calendarGrid) {
             calendarGrid.addEventListener('click', function(e) {
+                // Procura o card mais próximo do clique (pois pode clicar no texto dentro do card)
                 const card = e.target.closest('.appointment-card');
+                
+                // Se achou um card e ele NÃO é "remarcado" (transparente)
                 if (card && !card.classList.contains('status-remarcado')) {
                     openModalRemarcar(card);
                 }
             });
         }
 
-        clientSelect.addEventListener('change', function() {
-            const clienteId = this.value;
-            petSelect.innerHTML = '<option value="">Carregando...</option>';
-            petSelect.disabled = true;
+        // Buscar Pets ao trocar Cliente
+        if(clientSelect) {
+            clientSelect.addEventListener('change', function() {
+                const clienteId = this.value;
+                petSelect.innerHTML = '<option value="">Carregando...</option>';
+                petSelect.disabled = true;
 
-            if (!clienteId) {
-                petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
-                return;
-            }
+                if (!clienteId) {
+                    petSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+                    return;
+                }
 
-            fetch(`buscar_pets_cliente.php?cliente_id=${clienteId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.pets.length > 0) {
-                        petSelect.innerHTML = '<option value="">Selecione um pet...</option>';
-                        data.pets.forEach(pet => {
-                            const option = document.createElement('option');
-                            option.value = pet.id;
-                            option.textContent = pet.nome;
-                            petSelect.appendChild(option);
-                        });
-                        petSelect.disabled = false;
-                    } else {
-                        petSelect.innerHTML = '<option value="">Este cliente não tem pets</option>';
-                    }
+                fetch(`buscar_pets_cliente.php?cliente_id=${clienteId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.pets.length > 0) {
+                            petSelect.innerHTML = '<option value="">Selecione um pet...</option>';
+                            data.pets.forEach(pet => {
+                                const option = document.createElement('option');
+                                option.value = pet.id;
+                                option.textContent = pet.nome;
+                                petSelect.appendChild(option);
+                            });
+                            petSelect.disabled = false;
+                        } else {
+                            petSelect.innerHTML = '<option value="">Este cliente não tem pets</option>';
+                        }
+                    })
+                    .catch(err => { console.error(err); petSelect.innerHTML = '<option value="">Erro de conexão</option>'; });
+            });
+        }
+
+        // Salvar Agendamento
+        if(saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                const dadosFormulario = {
+                    cliente_id: clientSelect.value,
+                    pet_id: petSelect.value,
+                    servico: document.getElementById('app-service').value,
+                    date: document.getElementById('app-date').value,
+                    time: document.getElementById('app-time').value,
+                    profissional: document.getElementById('app-professional').value,
+                    observacoes: document.getElementById('app-notes').value
+                };
+
+                if (!dadosFormulario.cliente_id || !dadosFormulario.pet_id || !dadosFormulario.servico || !dadosFormulario.date || !dadosFormulario.time) {
+                    alert('Por favor, preencha os campos obrigatórios (Cliente, Pet, Serviço, Data, Hora).'); return;
+                }
+                
+                let url = (modoModal === 'remarcar') ? 'remarcar_agendamento.php' : 'salvar_agendamento.php';
+                let body = (modoModal === 'remarcar') ? { id_antigo: idAgendamentoAntigo, novos_dados: dadosFormulario } : dadosFormulario;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
                 })
-                .catch(err => { console.error(err); petSelect.innerHTML = '<option value="">Erro de conexão</option>'; });
-        });
-
-        saveBtn.addEventListener('click', function() {
-            const dadosFormulario = {
-                cliente_id: clientSelect.value,
-                pet_id: petSelect.value,
-                servico: document.getElementById('app-service').value,
-                date: document.getElementById('app-date').value,
-                time: document.getElementById('app-time').value,
-                profissional: document.getElementById('app-professional').value,
-                observacoes: document.getElementById('app-notes').value
-            };
-
-            if (!dadosFormulario.cliente_id || !dadosFormulario.pet_id || !dadosFormulario.servico || !dadosFormulario.date || !dadosFormulario.time) {
-                alert('Por favor, preencha os campos obrigatórios.'); return;
-            }
-            
-            let url = (modoModal === 'remarcar') ? 'remarcar_agendamento.php' : 'salvar_agendamento.php';
-            let body = (modoModal === 'remarcar') ? { id_antigo: idAgendamentoAntigo, novos_dados: dadosFormulario } : dadosFormulario;
-
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            })
-            .then(res => res.json())
-            .then(result => {
-                alert(result.message);
-                if (result.success) { closeModal(); location.reload(); }
-            })
-            .catch(err => { console.error(err); alert('Erro de comunicação.'); });
-        });
+                .then(res => res.json())
+                .then(result => {
+                    alert(result.message);
+                    if (result.success) { closeModal(); location.reload(); }
+                })
+                .catch(err => { console.error(err); alert('Erro de comunicação.'); });
+            });
+        }
     } 
 
 
@@ -271,6 +297,51 @@ document.addEventListener('DOMContentLoaded', function() {
             let petsArray = [];
             let editingClientId = null; 
 
+            // ============================================================
+            // --- BUSCA AUTOMÁTICA DE CEP (ViaCEP) ---
+            // ============================================================
+            const cepInput = document.getElementById('client-cep');
+            
+            if (cepInput) {
+                cepInput.addEventListener('blur', function() {
+                    // 1. Limpa o CEP (remove traços e pontos)
+                    const cep = this.value.replace(/\D/g, '');
+
+                    // 2. Verifica se tem 8 dígitos
+                    if (cep.length === 8) {
+                        
+                        // Feedback visual (opcional)
+                        document.getElementById('client-street').value = "Buscando...";
+                        document.getElementById('client-neighborhood').value = "...";
+                        
+                        // 3. Consulta a API do ViaCEP
+                        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (!data.erro) {
+                                    // 4. Preenche os campos se achou
+                                    document.getElementById('client-street').value = data.logradouro;
+                                    document.getElementById('client-neighborhood').value = data.bairro;
+                                    document.getElementById('client-city').value = data.localidade;
+                                    document.getElementById('client-state').value = data.uf;
+                                    
+                                    // 5. Joga o foco para o número (único campo que falta)
+                                    document.getElementById('client-number').focus();
+                                } else {
+                                    alert("CEP não encontrado na base de dados.");
+                                    document.getElementById('client-street').value = "";
+                                    document.getElementById('client-neighborhood').value = "";
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Erro ViaCEP:", error);
+                                alert("Erro ao buscar o endereço. Verifique sua internet.");
+                            });
+                    }
+                });
+            }
+            // ============================================================
+
             clientModal.querySelector('.close-modal-btn').addEventListener('click', () => clientModal.style.display = 'none');
             clientModal.querySelector('.cancel-btn').addEventListener('click', () => clientModal.style.display = 'none');
 
@@ -377,7 +448,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     numero: document.getElementById('client-number').value.trim(),
                     bairro: document.getElementById('client-neighborhood').value.trim(),
                     cidade: document.getElementById('client-city').value.trim(),
-                    estado: document.getElementById('client-state').value.trim().toUpperCase()
+                    estado: document.getElementById('client-state').value.trim().toUpperCase(),
+                    cpf: document.getElementById('client-cpf') ? document.getElementById('client-cpf').value.trim() : '' // CPF Adicionado
                 };
 
                 if (clienteData.nome_completo === '') { alert('O nome do cliente é obrigatório.'); return; }
@@ -444,6 +516,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.success && data.cliente) {
                         const cliente = data.cliente;
                         document.getElementById('client-name').value = cliente.nome_completo || '';
+                        
+                        // Preenche CPF se existir
+                        if(document.getElementById('client-cpf')) {
+                            document.getElementById('client-cpf').value = cliente.cpf || '';
+                        }
+
                         document.getElementById('client-phone').value = cliente.telefone || '';
                         document.getElementById('client-email').value = cliente.email || '';
                         document.getElementById('client-cep').value = cliente.cep || '';
@@ -466,16 +544,16 @@ document.addEventListener('DOMContentLoaded', function() {
         } 
     } 
 
+
     // ===================================================
-    // 4. LÓGICA DO PDV (VENDAS) - UNIFICADA E CORRIGIDA
+    // 4. LÓGICA DO PDV (VENDAS)
     // ===================================================
     const pdvSearchInput = document.getElementById('pdv-search');
     
-    if (pdvSearchInput) { 
+    if (pdvSearchInput) { // Só roda na tela de vendas
         
         let carrinho = [];
         let totalGlobal = 0;
-        let dadosFechamento = null;
         
         // Elementos do PDV
         const carrinhoLista = document.getElementById('carrinho-lista');
@@ -508,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 carrinhoLista.appendChild(tr);
             });
 
-            const desconto = parseFloat(descontoInput.value) || 0;
+            const desconto = parseFloat(descontoInput.value.replace(',', '.')) || 0;
             totalGlobal = subtotal - desconto;
             if(totalGlobal < 0) totalGlobal = 0;
             totalVendaEl.textContent = 'R$ ' + totalGlobal.toFixed(2);
@@ -620,6 +698,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btnFecharCaixa && closureModal) {
             const closureContent = document.getElementById('closure-content');
             const closeBtns = closureModal.querySelectorAll('.close-modal-btn');
+            
+            // Variável local para guardar os dados (não precisa ser global)
+            let dadosFechamento = null; 
 
             btnFecharCaixa.addEventListener('click', function() {
                 closureModal.style.display = 'flex';
@@ -671,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     } 
 
-    // --- FUNÇÕES DE IMPRESSÃO GLOBAIS (Para serem acessíveis) ---
+    // --- FUNÇÕES DE IMPRESSÃO GLOBAIS ---
     function imprimirTicket(data) {
         const win = window.open('', '', 'width=350,height=600');
         let itemsHtml = '';
@@ -684,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pagtosHtml += `<tr><td>${f.forma_pagamento}</td><td align="right">R$ ${parseFloat(f.total).toFixed(2)}</td></tr>`;
         });
 
-        win.document.write(`<html><head><style>body{font-family:monospace;font-size:12px;width:300px;}.center{text-align:center;}.line{border-top:1px dashed #000;margin:5px 0;}table{width:100%;}</style></head><body>
+        win.document.write(`<html><head><style>body{font-family:monospace;font-size:12px;width:300px;margin:0;padding:5px;}.center{text-align:center;}.line{border-top:1px dashed #000;margin:5px 0;}table{width:100%;}</style></head><body>
             <div class="center"><b>${data.empresa.nome_fantasia}</b><br>FECHAMENTO<br>${data.data_hora}</div>
             <div class="line"></div><div>Op: ${data.operador.nome}</div><div class="line"></div>
             <table>${itemsHtml}</table>
@@ -698,105 +779,64 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function imprimirA4(data) {
         const win = window.open('', '', 'width=900,height=700');
-        
         let itemsHtml = '';
         data.itens.forEach(i => {
             itemsHtml += `<tr><td>${i.nome_item}</td><td>${parseFloat(i.qtd)}</td><td>R$ ${parseFloat(i.total).toFixed(2)}</td></tr>`;
         });
-        
         const content = `
-            <html>
-            <head>
-                <title>Relatório de Fechamento - ${data.data_hora}</title>
-                <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
-                    h1 { margin-bottom: 5px; font-size: 24px; text-transform: uppercase; }
-                    .header { margin-bottom: 40px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-                    .header p { margin: 5px 0; font-size: 14px; }
-                    
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 13px; }
-                    th { background-color: #f4f4f4; font-weight: bold; }
-                    
-                    .total-box { 
-                        text-align: right; 
-                        font-size: 1.5em; 
-                        font-weight: bold; 
-                        background: #f9f9f9; 
-                        padding: 15px; 
-                        border: 1px solid #ddd; 
-                        border-radius: 4px;
-                    }
-
-                    /* Área de Assinatura */
-                    .signature-section {
-                        margin-top: 80px; /* Espaço para assinar */
-                        display: flex;
-                        justify-content: flex-end; /* Alinha à direita, ou 'center' se preferir */
-                    }
-                    .signature-box {
-                        text-align: center;
-                        width: 300px;
-                    }
-                    .signature-line {
-                        border-top: 1px solid #000;
-                        margin-bottom: 8px;
-                    }
-                    .signature-name {
-                        font-weight: bold;
-                        font-size: 14px;
-                        text-transform: uppercase;
-                    }
-                    .signature-role {
-                        font-size: 12px;
-                        color: #666;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>Relatório de Fechamento de Caixa</h1>
-                    <p><strong>Empresa:</strong> ${data.empresa.nome_fantasia} | <strong>CNPJ:</strong> ${data.empresa.cnpj}</p>
-                    <p><strong>Data do Fechamento:</strong> ${data.data_hora}</p>
-                </div>
-
-                <h3>1. Detalhamento de Serviços e Vendas</h3>
-                <table>
-                    <thead><tr><th>Item / Serviço</th><th>Quantidade</th><th>Valor Total</th></tr></thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>
-
-                <h3>2. Resumo Financeiro</h3>
-                <table style="width: 60%;">
-                    <thead><tr><th>Forma de Pagamento</th><th>Valor Recebido</th></tr></thead>
-                    <tbody>
-                        ${data.financeiro.map(f => `<tr><td>${f.forma_pagamento}</td><td>R$ ${parseFloat(f.total).toFixed(2)}</td></tr>`).join('')}
-                    </tbody>
-                </table>
-
-                <div class="total-box">
-                    Total Geral: R$ ${data.total_geral.toFixed(2)}
-                </div>
-
-                <div class="signature-section">
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        <div class="signature-name">${data.operador.nome}</div>
-                        <div class="signature-role">${data.operador.cargo}</div>
-                        <div style="font-size: 11px; color: #999; margin-top: 5px;">Responsável pelo Fechamento</div>
-                    </div>
-                </div>
-
-            </body>
-            </html>
-        `;
-
+            <html><head><title>Relatório</title><style>body{font-family:Arial;padding:40px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th,td{border:1px solid #ddd;padding:10px;text-align:left;}th{background:#f4f4f4;}.total{text-align:right;font-size:1.5em;font-weight:bold;}.sig-box{margin-top:80px;text-align:center;width:300px;float:right;}.sig-line{border-top:1px solid #000;}</style></head><body>
+            <h1>Relatório de Fechamento</h1>
+            <p><strong>Empresa:</strong> ${data.empresa.nome_fantasia}</p><p><strong>Data:</strong> ${data.data_hora}</p>
+            <h3>Itens Vendidos</h3><table><thead><tr><th>Item</th><th>Qtd</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+            <h3>Pagamentos</h3><table style="width:50%"><thead><tr><th>Método</th><th>Valor</th></tr></thead><tbody>
+            ${data.financeiro.map(f => `<tr><td>${f.forma_pagamento}</td><td>R$ ${parseFloat(f.total).toFixed(2)}</td></tr>`).join('')}
+            </tbody></table>
+            <div class="total">Total: R$ ${data.total_geral.toFixed(2)}</div>
+            <div class="sig-box"><div class="sig-line"></div><strong>${data.operador.nome}</strong><br><small>${data.operador.cargo}</small></div>
+            </body></html>`;
         win.document.write(content);
         win.document.close();
         win.focus();
-        
-        // Pequeno delay para garantir que o CSS carregue antes de imprimir
         setTimeout(() => { win.print(); }, 500);
     }
+
+
+    // ===================================================
+    // 5. MÁSCARAS DE INPUT (CPF, CNPJ, TELEFONE)
+    // ===================================================
+    const maskInput = (input, format) => {
+        input.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, ""); 
+            if (format === 'cpf') {
+                if(value.length > 11) value = value.slice(0, 11);
+                value = value.replace(/(\d{3})(\d)/, "$1.$2");
+                value = value.replace(/(\d{3})(\d)/, "$1.$2");
+                value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            } 
+            else if (format === 'cnpj') {
+                if(value.length > 14) value = value.slice(0, 14);
+                value = value.replace(/^(\d{2})(\d)/, "$1.$2");
+                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+                value = value.replace(/\.(\d{3})(\d)/, ".$1/$2");
+                value = value.replace(/(\d{4})(\d)/, "$1-$2");
+            }
+            else if (format === 'tel') {
+                if(value.length > 11) value = value.slice(0, 11);
+                value = value.replace(/^(\d{2})(\d)/, "($1) $2");
+                value = value.replace(/(\d{5})(\d)/, "$1-$2");
+            }
+            e.target.value = value;
+        });
+    };
+
+    const cpfInput = document.getElementById('client-cpf');
+    const cnpjInput = document.getElementById('inst-cnpj');
+    const phoneInput = document.getElementById('client-phone');
+    const phoneInputUser = document.getElementById('m-phone'); 
+
+    if (cpfInput) maskInput(cpfInput, 'cpf');
+    if (cnpjInput) maskInput(cnpjInput, 'cnpj');
+    if (phoneInput) maskInput(phoneInput, 'tel');
+    if (phoneInputUser) maskInput(phoneInputUser, 'tel');
 
 });

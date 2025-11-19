@@ -1,31 +1,38 @@
 <?php
-// Define que a resposta será em JSON
+// Inicia a sessão para pegar o ID da loja
+session_start();
 header('Content-Type: application/json');
 
-// --- 1. INCLUIR SUA CONEXÃO (que cria a variável $pdo) ---
 require 'conexao.php'; 
 
-// --- 3. PREPARAR A RESPOSTA (JSON padrão) ---
+// --- 1. SEGURANÇA SAAS ---
+if (!isset($_SESSION['instituicao_id'])) {
+    echo json_encode(['success' => false, 'message' => 'Sessão inválida ou expirada.']);
+    exit;
+}
+$id_loja = $_SESSION['instituicao_id'];
+
 $response = [
     'success' => false,
     'cliente' => null,
     'pets' => []
 ];
 
-// --- 2. VERIFICAR SE O ID FOI ENVIADO ---
+// --- 2. VERIFICAR ID ---
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    $response['message'] = 'ID do cliente não fornecido na URL.';
+    $response['message'] = 'ID do cliente não fornecido.';
     echo json_encode($response);
     exit;
 }
 
-$clientId = (int)$_GET['id']; // Converte o ID para um inteiro por segurança
+$clientId = (int)$_GET['id'];
 
 try {
-    // --- 4. BUSCAR DADOS DO CLIENTE (Sintaxe PDO) ---
+    // --- 3. BUSCAR CLIENTE (FILTRADO PELA LOJA) ---
     $sql_cliente = "SELECT 
                         id, 
                         nome_completo, 
+                        cpf,  -- <-- Adicionado CPF
                         telefone, 
                         email, 
                         cep, 
@@ -37,19 +44,19 @@ try {
                     FROM 
                         clientes 
                     WHERE 
-                        id = ?";
+                        id = ? AND instituicao_id = ?"; // <-- Trava de segurança
     
     $stmt_cliente = $pdo->prepare($sql_cliente);
-    $stmt_cliente->execute([$clientId]); // Passa o ID para o '?'
-    $cliente = $stmt_cliente->fetch(); // Pega o primeiro resultado
+    $stmt_cliente->execute([$clientId, $id_loja]); // Passa ID do cliente e ID da loja
+    $cliente = $stmt_cliente->fetch();
 
     if ($cliente) {
-        // Cliente foi encontrado
         $response['success'] = true;
         $response['cliente'] = $cliente;
 
-        // --- 5. BUSCAR OS PETS ASSOCIADOS (Sintaxe PDO) ---
+        // --- 4. BUSCAR PETS ---
         $sql_pets = "SELECT 
+                        id, -- É bom trazer o ID do pet também
                         nome, 
                         especie, 
                         raca, 
@@ -60,23 +67,18 @@ try {
                         cliente_id = ?";
         
         $stmt_pets = $pdo->prepare($sql_pets);
-        $stmt_pets->execute([$clientId]); // Passa o ID para o '?'
-        $pets = $stmt_pets->fetchAll(); // Pega TODOS os pets
+        $stmt_pets->execute([$clientId]);
+        $pets = $stmt_pets->fetchAll();
 
         $response['pets'] = $pets;
 
     } else {
-        // Cliente não foi encontrado com esse ID
-        $response['message'] = 'Cliente não encontrado (ID: ' . $clientId . ')';
+        $response['message'] = 'Cliente não encontrado ou não pertence à sua loja.';
     }
 
 } catch (PDOException $e) {
-    // Se o SQL falhar, captura o erro e envia como JSON (NÃO mais como HTML)
     $response['message'] = 'Erro de SQL: ' . $e->getMessage();
 }
 
-// --- 6. FECHAR A CONEXÃO E ENVIAR A RESPOSTA JSON ---
-// (O PDO não precisa de $pdo->close() aqui, ele fecha sozinho)
 echo json_encode($response);
-
 ?>

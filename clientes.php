@@ -96,11 +96,17 @@ $clientes = $stmt_clientes->fetchAll();
                 
                 <div class="form-group span-2">
                     <label for="client-name">Nome Completo *</label>
-                    <input type="text" id="client-name" name="client-name" required>
+                    <input type="text" id="client-name" required>
                 </div>
+                
+                <div class="form-group span-2">
+                    <label for="client-cpf">CPF</label>
+                    <input type="text" id="client-cpf" placeholder="000.000.000-00">
+                </div>
+
                 <div class="form-group span-2">
                     <label for="client-phone">Telefone *</label>
-                    <input type="tel" id="client-phone" name="client-phone" required>
+                    <input type="tel" id="client-phone" required placeholder="(00) 00000-0000">
                 </div>
                 <div class="form-group span-4">
                     <label for="client-email">Email</label>
